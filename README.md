@@ -137,12 +137,6 @@ subway-congestion-system/
 - Maven 3.8+
 - Docker & Docker Compose
 
-### 1. 저장소 클론
-```bash
-git clone https://github.com/your-username/subway-congestion-analysis.git
-cd subway-congestion-analysis
-```
-
 ### 2. 인프라 실행
 ```bash
 docker-compose up -d
