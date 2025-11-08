@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # Eureka? ??? ??? ?? ???
+          lower-case-service-id: true
+
+      routes:
+        # Data Collector Service ???
+        - id: data-collector-service
+          uri: lb://DATA-COLLECTOR-SERVICE
+          predicates:
+            - Path=/api/collector/**
+          filters:
+            - RewritePath=/api/collector/(?<segment>.*), /${segment}
+
+        # API Service ??? (??? ??)
+        - id: api-service
+          uri: lb://API-SERVICE
+          predicates:
+            - Path=/api/subway/**
+          filters:
+            - RewritePath=/api/subway/(?<segment>.*), /${segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
