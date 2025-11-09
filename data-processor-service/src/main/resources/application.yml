@@ -1,0 +1,59 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: data-processor-service
+
+  # Kafka Consumer ??
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: data-processor-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.subway.dataprocessorservice.model.SubwayRealtimeData
+
+  # PostgreSQL ??
+  datasource:
+    url: jdbc:postgresql://localhost:5432/subway_analytics
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  # JPA ??
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# Eureka ?? (?? ????)
+eureka:
+  client:
+    enabled: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# Spark ??
+spark:
+  app-name: subway-data-processor
+  master: local[*]  # ?? ??
+
+# ??
+logging:
+  level:
+    com.subway.dataprocessorservice: DEBUG
+    org.apache.spark: WARN
+    org.springframework.kafka: INFO

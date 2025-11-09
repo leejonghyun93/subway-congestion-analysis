@@ -31,6 +31,9 @@
         <module>eureka-server</module>
         <module>api-gateway</module>
         <module>data-collector-service</module>
+        <module>data-processor-service</module>
+        <module>analytics-service</module>
+        <module>prediction-service</module>
     </modules>
 
     <dependencyManagement>
