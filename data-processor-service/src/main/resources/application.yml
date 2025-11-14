@@ -5,7 +5,7 @@ spring:
   application:
     name: data-processor-service
 
-  # Kafka Consumer ??
+  # Kafka Consumer
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
@@ -17,14 +17,14 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.value.default.type: com.subway.dataprocessorservice.model.SubwayRealtimeData
 
-  # PostgreSQL ??
+  # PostgreSQL
   datasource:
     url: jdbc:postgresql://localhost:5432/subway_analytics
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
 
-  # JPA ??
+  # JPA
   jpa:
     hibernate:
       ddl-auto: update
@@ -34,7 +34,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-# Eureka ?? (?? ????)
+# Eureka
 eureka:
   client:
     enabled: false
@@ -46,10 +46,10 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-# Spark ??
+# Spark
 spark:
   app-name: subway-data-processor
-  master: local[*]  # ?? ??
+  master: local[*]
 
 # ??
 logging:

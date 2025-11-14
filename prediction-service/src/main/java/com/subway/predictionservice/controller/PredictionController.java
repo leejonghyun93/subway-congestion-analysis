@@ -5,11 +5,15 @@ import com.subway.predictionservice.dto.ModelMetrics;
 import com.subway.predictionservice.dto.PredictionRequest;
 import com.subway.predictionservice.dto.PredictionResponse;
 import com.subway.predictionservice.service.PredictionService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 
 @Slf4j
 @RestController
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PredictionController {
 
+    @Lazy
     private final PredictionService predictionService;
 
     /**

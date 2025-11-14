@@ -1,5 +1,6 @@
 package com.subway.datacollectorservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.subway.datacollectorservice.model.SubwayRealtimeData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,16 @@ public class KafkaProducerService {
 
     private static final String TOPIC = "subway-realtime-data";
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public void sendToKafka(SubwayRealtimeData data) {
         try {
-            CompletableFuture<SendResult<String, Object>> future =
-                    kafkaTemplate.send(TOPIC, data.getStationName(), data);
+            // Object를 JSON String으로 변환
+            String jsonData = objectMapper.writeValueAsString(data);
+
+            CompletableFuture<SendResult<String, String>> future =
+                    kafkaTemplate.send(TOPIC, data.getStationName(), jsonData);
 
             future.whenComplete((result, ex) -> {
                 if (ex == null) {

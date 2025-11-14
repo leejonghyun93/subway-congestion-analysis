@@ -34,6 +34,10 @@
         <module>data-processor-service</module>
         <module>analytics-service</module>
         <module>prediction-service</module>
+        <module>chatbot-service</module>
+        <module>notification-service</module>
+        <module>batch-service</module>
+        <module>user-service</module>
     </modules>
 
     <dependencyManagement>

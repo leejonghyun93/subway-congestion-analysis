@@ -3,7 +3,6 @@ package com.subway.predictionservice.service;
 import com.subway.predictionservice.dto.ModelMetrics;
 import com.subway.predictionservice.entity.CongestionStatistics;
 import com.subway.predictionservice.repository.CongestionStatisticsRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.ml.evaluation.RegressionEvaluator;
 import org.apache.spark.ml.feature.VectorAssembler;
@@ -12,6 +11,7 @@ import org.apache.spark.ml.regression.LinearRegressionModel;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -25,12 +25,15 @@ import java.util.List;
 
 @Slf4j
 @Service
-@Lazy
-@RequiredArgsConstructor
 public class MachineLearningService {
 
-    private final SparkSession sparkSession;
-    private final CongestionStatisticsRepository congestionStatisticsRepository;
+
+    @Autowired
+    @Lazy
+    private SparkSession sparkSession;
+
+    @Autowired
+    private CongestionStatisticsRepository congestionStatisticsRepository;
 
     @Value("${spark.model.save-path}")
     private String modelSavePath;
@@ -38,14 +41,8 @@ public class MachineLearningService {
     private LinearRegressionModel currentModel;
     private ModelMetrics currentMetrics;
     private String currentModelVersion;
-    private boolean initialized = false;  // ✅ 초기화 플래그 추가
+    private boolean initialized = false;
 
-    // ✅ @PostConstruct 제거!
-    // 대신 필요할 때 초기화하도록 변경
-
-    /**
-     * Lazy 초기화 - 첫 예측 요청 시 자동으로 초기화
-     */
     private void ensureInitialized() {
         if (!initialized) {
             synchronized (this) {
@@ -62,9 +59,6 @@ public class MachineLearningService {
         }
     }
 
-    /**
-     * 모델 로드 또는 새로 학습
-     */
     public void loadOrTrainModel() {
         String latestModelPath = getLatestModelPath();
 
@@ -84,72 +78,10 @@ public class MachineLearningService {
         }
     }
 
-    /**
-     * 혼잡도 예측
-     */
-    public Double predict(String lineNumber, String stationName, Integer hourSlot, Integer dayOfWeek) {
-        ensureInitialized();  // ✅ 여기서 초기화 확인
-
-        if (currentModel == null) {
-            log.warn("Model not available for prediction");
-            return null;
-        }
-
-        try {
-            // Feature 데이터 생성
-            List<PredictionData> dataList = new ArrayList<>();
-            dataList.add(new PredictionData(
-                    lineNumber,
-                    stationName,
-                    hourSlot,
-                    encodeLineNumber(lineNumber),
-                    dayOfWeek != null ? dayOfWeek : getCurrentDayOfWeek()
-            ));
-
-            // DataFrame 생성
-            Dataset<Row> inputData = sparkSession.createDataFrame(dataList, PredictionData.class);
-
-            // Feature 벡터 생성
-            VectorAssembler assembler = new VectorAssembler()
-                    .setInputCols(new String[]{"hourSlot", "lineNumberEncoded", "dayOfWeek"})
-                    .setOutputCol("features");
-
-            Dataset<Row> assembledData = assembler.transform(inputData);
-
-            // 예측 실행
-            Dataset<Row> predictions = currentModel.transform(assembledData);
-
-            // 결과 추출
-            Row result = predictions.first();
-            double prediction = result.getAs("prediction");
-
-            // 예측값 범위 제한 (0~100)
-            prediction = Math.max(0, Math.min(100, prediction));
-
-            log.debug("Prediction: line={}, station={}, hour={} -> congestion={}",
-                    lineNumber, stationName, hourSlot, prediction);
-
-            // 마지막 사용 시간 업데이트
-            if (currentMetrics != null) {
-                currentMetrics.setLastUsedAt(LocalDateTime.now());
-            }
-
-            return prediction;
-
-        } catch (Exception e) {
-            log.error("Prediction failed: {}", e.getMessage(), e);
-            return null;
-        }
-    }
-
-    /**
-     * 새로운 모델 학습
-     */
     public ModelMetrics trainNewModel() {
         log.info("Starting model training...");
 
         try {
-            // 1. 데이터 로드
             List<CongestionStatistics> trainingData = congestionStatisticsRepository.findAllForTraining();
 
             if (trainingData.isEmpty()) {
@@ -159,17 +91,14 @@ public class MachineLearningService {
 
             log.info("Loaded {} records for training", trainingData.size());
 
-            // 2. Spark DataFrame 생성
             Dataset<Row> dataFrame = createDataFrame(trainingData);
 
-            // 3. Feature 벡터 생성
             VectorAssembler assembler = new VectorAssembler()
                     .setInputCols(new String[]{"hourSlot", "lineNumberEncoded", "dayOfWeek"})
                     .setOutputCol("features");
 
             Dataset<Row> assembledData = assembler.transform(dataFrame);
 
-            // 4. 학습/테스트 데이터 분리 (80:20)
             Dataset<Row>[] splits = assembledData.randomSplit(new double[]{0.8, 0.2}, 42);
             Dataset<Row> trainingSet = splits[0];
             Dataset<Row> testSet = splits[1];
@@ -177,7 +106,6 @@ public class MachineLearningService {
             log.info("Training set size: {}, Test set size: {}",
                     trainingSet.count(), testSet.count());
 
-            // 5. 선형 회귀 모델 학습
             LinearRegression lr = new LinearRegression()
                     .setLabelCol("avgCongestion")
                     .setFeaturesCol("features")
@@ -187,7 +115,6 @@ public class MachineLearningService {
 
             currentModel = lr.fit(trainingSet);
 
-            // 6. 모델 평가
             Dataset<Row> predictions = currentModel.transform(testSet);
 
             RegressionEvaluator evaluator = new RegressionEvaluator()
@@ -200,7 +127,6 @@ public class MachineLearningService {
 
             log.info("Model Training Results - RMSE: {}, MAE: {}, R²: {}", rmse, mae, r2);
 
-            // 7. 모델 저장
             currentModelVersion = "model_" +
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String savePath = modelSavePath + "/" + currentModelVersion;
@@ -216,7 +142,6 @@ public class MachineLearningService {
                 log.error("Failed to save model: {}", e.getMessage());
             }
 
-            // 8. 메트릭 저장
             currentMetrics = ModelMetrics.builder()
                     .modelVersion(currentModelVersion)
                     .rmse(rmse)
@@ -235,23 +160,62 @@ public class MachineLearningService {
         }
     }
 
-    /**
-     * 현재 모델 메트릭 반환
-     */
+    public Double predict(String lineNumber, String stationName, Integer hourSlot, Integer dayOfWeek) {
+        ensureInitialized();
+
+        if (currentModel == null) {
+            log.warn("Model not available for prediction");
+            return null;
+        }
+
+        try {
+            List<PredictionData> dataList = new ArrayList<>();
+            dataList.add(new PredictionData(
+                    lineNumber,
+                    stationName,
+                    hourSlot,
+                    encodeLineNumber(lineNumber),
+                    dayOfWeek != null ? dayOfWeek : getCurrentDayOfWeek()
+            ));
+
+            Dataset<Row> inputData = sparkSession.createDataFrame(dataList, PredictionData.class);
+
+            VectorAssembler assembler = new VectorAssembler()
+                    .setInputCols(new String[]{"hourSlot", "lineNumberEncoded", "dayOfWeek"})
+                    .setOutputCol("features");
+
+            Dataset<Row> assembledData = assembler.transform(inputData);
+            Dataset<Row> predictions = currentModel.transform(assembledData);
+
+            Row result = predictions.first();
+            double prediction = result.getAs("prediction");
+
+            prediction = Math.max(0, Math.min(100, prediction));
+
+            log.debug("Prediction: line={}, station={}, hour={} -> congestion={}",
+                    lineNumber, stationName, hourSlot, prediction);
+
+            if (currentMetrics != null) {
+                currentMetrics.setLastUsedAt(LocalDateTime.now());
+            }
+
+            return prediction;
+
+        } catch (Exception e) {
+            log.error("Prediction failed: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
     public ModelMetrics getCurrentMetrics() {
-        ensureInitialized();  // ✅ 초기화 확인
+        ensureInitialized();
         return currentMetrics;
     }
 
-    /**
-     * 모델 버전 반환
-     */
     public String getCurrentModelVersion() {
-        ensureInitialized();  // ✅ 초기화 확인
+        ensureInitialized();
         return currentModelVersion;
     }
-
-    // 나머지 메서드들은 동일...
 
     private Dataset<Row> createDataFrame(List<CongestionStatistics> data) {
         List<TrainingData> trainingDataList = new ArrayList<>();

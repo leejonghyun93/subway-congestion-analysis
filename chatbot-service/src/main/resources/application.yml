@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: chatbot-service
+
+  # MongoDB ??
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/subway_chatbot
+      auto-index-creation: true
+
+# Eureka ??
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# ?? ??
+server:
+  port: 8085
+
+# Ollama ??
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2:3b
+  timeout: 60s
+
+# ?? ??? URL (Feign Client?)
+services:
+  analytics:
+    url: http://localhost:8083
+  prediction:
+    url: http://localhost:8084
+
+# ?? ??
+logging:
+  level:
+    com.subway.chatbotservice: INFO
+    dev.langchain4j: DEBUG

@@ -9,11 +9,36 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true  # Eureka? ??? ??? ?? ???
-          lower-case-service-id: true
+          enabled: false
+
+      # CORS 설정 추가
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "http://localhost:3000"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
 
       routes:
-        # Data Collector Service ???
+        # User Service 라우트 추가 (제일 위에!)
+        - id: user-service-auth
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/**
+
+        - id: user-service-users
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/users/**
+
+        # Data Collector Service
         - id: data-collector-service
           uri: lb://DATA-COLLECTOR-SERVICE
           predicates:
@@ -21,13 +46,41 @@ spring:
           filters:
             - RewritePath=/api/collector/(?<segment>.*), /${segment}
 
-        # API Service ??? (??? ??)
-        - id: api-service
-          uri: lb://API-SERVICE
+        # Data Processor Service
+        - id: data-processor-service
+          uri: lb://DATA-PROCESSOR-SERVICE
           predicates:
-            - Path=/api/subway/**
-          filters:
-            - RewritePath=/api/subway/(?<segment>.*), /${segment}
+            - Path=/api/processor/**
+
+        # Analytics Service
+        - id: analytics-service
+          uri: lb://ANALYTICS-SERVICE
+          predicates:
+            - Path=/api/analytics/**
+
+        # Prediction Service
+        - id: prediction-service
+          uri: lb://PREDICTION-SERVICE
+          predicates:
+            - Path=/api/prediction/**
+
+        # Chatbot Service 라우트 추가
+        - id: chatbot-service
+          uri: lb://CHATBOT-SERVICE
+          predicates:
+            - Path=/api/chatbot/**
+
+        # Notification Service 라우트 추가
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notification/**
+
+        #  Batch Service 라우트 추가
+        - id: batch-service
+          uri: lb://BATCH-SERVICE
+          predicates:
+            - Path=/api/batch/**
 
 eureka:
   client:
@@ -37,3 +90,9 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+
+# 로깅
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.cors: DEBUG

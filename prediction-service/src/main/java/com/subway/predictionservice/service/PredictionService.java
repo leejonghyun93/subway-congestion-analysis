@@ -6,12 +6,14 @@ import com.subway.predictionservice.dto.PredictionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Slf4j
 @Service
+@Lazy
 @RequiredArgsConstructor
 public class PredictionService {
 

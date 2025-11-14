@@ -19,7 +19,7 @@ public class SparkConfig {
     private String master;
 
     @Bean
-    @Lazy  // ✅ Lazy 추가 - 필요할 때만 생성
+    @Lazy
     public SparkConf sparkConf() {
         SparkConf conf = new SparkConf()
                 .setAppName(appName)

@@ -1,26 +1,13 @@
-server:
-  port: 8081
-
 spring:
   application:
     name: data-collector-service
 
-  # MongoDB 설정
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/subway_db
-      database: subway_db
-
-  # Kafka 설정
   kafka:
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-# Eureka 설정
 eureka:
   client:
     service-url:
@@ -31,15 +18,26 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-# 서울 열린데이터광장 API 설정
+server:
+  port: 8081
+
+#  더미 API 설정 추가
 subway:
   api:
-    key: YOUR_API_KEY_HERE
-    base-url: http://swopenapi.seoul.go.kr/api/subway
-  target-stations: 강남,신림,잠실,홍대입구,서울역,선릉,역삼,사당,신도림,구로디지털단지
+    key: dummy-key-not-used
+    url: http://openapi.seoul.go.kr:8088
 
-# 로깅 설정
+# Mock 데이터 설정
+mock:
+  enabled: true
+  stations:
+    - 강남역
+    - 홍대입구역
+    - 신림역
+    - 잠실역
+    - 구로디지털단지역
+
 logging:
   level:
-    com.subway.datacollectorservice: DEBUG
-    org.springframework.kafka: INFO
+    com.subway.datacollectorservice: INFO
+    org.apache.kafka: WARN
