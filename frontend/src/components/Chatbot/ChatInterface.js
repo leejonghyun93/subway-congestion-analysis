@@ -43,7 +43,7 @@ const ChatInterface = () => {
             const response = await chatbotService.sendMessage(input, sessionId);
             const botMessage = {
                 role: 'assistant',
-                content: response.data.data.response,
+                content: response.data.data.message,
             };
             setMessages((prev) => [...prev, botMessage]);
         } catch (error) {

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ChatResponse {
 
+    private String message;
     private String response;
     private String intent;
     private String sessionId;

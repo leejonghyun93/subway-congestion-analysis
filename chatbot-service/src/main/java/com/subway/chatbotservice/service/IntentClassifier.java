@@ -64,11 +64,21 @@ public class IntentClassifier {
 
     // 역 이름 추출 (간단한 방식)
     private String extractStationName(String message) {
-        Pattern pattern = Pattern.compile("([가-힣]+)역");
-        Matcher matcher = pattern.matcher(message);
-        if (matcher.find()) {
-            return matcher.group(1) + "역";
+        // 일반적인 역 이름 패턴
+        String[] stations = {
+                "강남", "역삼", "선릉", "삼성", "종합운동장",
+                "신림", "서울대입구", "봉천", "신대방", "구로디지털단지",
+                "신도림", "영등포구청", "당산", "합정", "홍대입구",
+                "신촌", "이대", "아현", "충정로", "시청"
+        };
+
+        for (String station : stations) {
+            // "강남역" 또는 "강남" 모두 매칭
+            if (message.contains(station + "역") || message.contains(station)) {
+                return station;  // "역" 없이 반환 (나중에 추가됨)
+            }
         }
+
         return null;
     }
 

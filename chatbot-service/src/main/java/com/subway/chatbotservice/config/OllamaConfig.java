@@ -1,14 +1,20 @@
 package com.subway.chatbotservice.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class OllamaConfig {
 
+    @Value("${ollama.api-url:http://localhost:11434}")
+    private String ollamaApiUrl;
+
     @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+    public WebClient ollamaWebClient() {
+        return WebClient.builder()
+                .baseUrl(ollamaApiUrl)
+                .build();
     }
 }

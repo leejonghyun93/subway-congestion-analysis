@@ -1,0 +1,23 @@
+package com.subway.analyticsservice.repository;
+
+import com.subway.analyticsservice.entity.CongestionData;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface CongestionDataRepository extends JpaRepository<CongestionData, Long> {
+
+    // 실시간 조회 (최신 1건)
+    CongestionData findTopByStationNameAndLineNumberOrderByTimestampDesc(
+            String stationName, String lineNumber);
+
+    // 시간대별 통계
+    List<CongestionData> findByStationNameAndTimestampAfterOrderByTimestampAsc(
+            String stationName, LocalDateTime timestamp);
+
+    // TOP 혼잡역 조회
+    List<CongestionData> findByTimestampAfter(LocalDateTime timestamp);
+}

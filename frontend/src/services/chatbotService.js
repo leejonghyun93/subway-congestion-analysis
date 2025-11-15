@@ -12,3 +12,6 @@ export const chatbotService = {
     getChatHistory: (sessionId) =>
         api.get(`/api/chatbot/history/${sessionId}`),
 };
+
+//  default export도 추가
+export default chatbotService;

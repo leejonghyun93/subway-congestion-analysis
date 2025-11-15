@@ -25,7 +25,6 @@ public class ChatbotController {
 
     /**
      * 채팅 요청
-     * POST /api/chatbot/chat
      */
     @PostMapping("/chat")
     public ResponseEntity<ApiResponse<ChatResponse>> chat(@Valid @RequestBody ChatRequest request) {
@@ -33,7 +32,7 @@ public class ChatbotController {
 
         try {
             ChatResponse response = chatbotService.chat(request);
-            return ResponseEntity.ok(ApiResponse.success("응답 생성 완료", response));
+            return ResponseEntity.ok(ApiResponse.success("응답 생성 완료", response)); 
         } catch (Exception e) {
             log.error("Chat failed: {}", e.getMessage(), e);
             return ResponseEntity.ok(ApiResponse.error("챗봇 응답 생성 실패: " + e.getMessage()));
@@ -42,19 +41,17 @@ public class ChatbotController {
 
     /**
      * 채팅 이력 조회 (세션별)
-     * GET /api/chatbot/history/{sessionId}
      */
     @GetMapping("/history/{sessionId}")
     public ResponseEntity<ApiResponse<List<ChatHistory>>> getHistory(@PathVariable String sessionId) {
         log.info("Get history: sessionId={}", sessionId);
 
         List<ChatHistory> history = chatHistoryRepository.findBySessionIdOrderByTimestampDesc(sessionId);
-        return ResponseEntity.ok(ApiResponse.success("채팅 이력 조회 완료", history));
+        return ResponseEntity.ok(ApiResponse.success("채팅 이력 조회 완료", history));  
     }
 
     /**
      * 사용자별 채팅 이력 조회
-     * GET /api/chatbot/history/user/{userId}
      */
     @GetMapping("/history/user/{userId}")
     public ResponseEntity<ApiResponse<List<ChatHistory>>> getUserHistory(@PathVariable String userId) {
@@ -66,7 +63,6 @@ public class ChatbotController {
 
     /**
      * 헬스 체크
-     * GET /api/chatbot/health
      */
     @GetMapping("/health")
     public ResponseEntity<ApiResponse<String>> healthCheck() {

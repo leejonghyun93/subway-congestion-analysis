@@ -12,10 +12,9 @@ spring:
       group-id: data-processor-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
         spring.json.trusted.packages: "*"
-        spring.json.value.default.type: com.subway.dataprocessorservice.model.SubwayRealtimeData
 
   # PostgreSQL
   datasource:
@@ -34,14 +33,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-# Eureka
+# Eureka 활성화
 eureka:
   client:
-    enabled: false
+    enabled: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: false
-    fetch-registry: false
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
@@ -51,9 +50,9 @@ spark:
   app-name: subway-data-processor
   master: local[*]
 
-# ??
 logging:
   level:
     com.subway.dataprocessorservice: DEBUG
     org.apache.spark: WARN
     org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
