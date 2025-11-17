@@ -2,9 +2,8 @@ spring:
   application:
     name: analytics-service
 
-  # PostgreSQL ??
   datasource:
-    url: jdbc:postgresql://localhost:5432/subway_analytics
+    url: jdbc:postgresql://postgresql:5432/subway_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -13,21 +12,19 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
 
-  # JPA ??
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate  # ????? validate ??
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
 
-  # Redis ??
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
       timeout: 3000ms
       lettuce:
@@ -36,27 +33,27 @@ spring:
           max-idle: 5
           min-idle: 2
 
-# Eureka ??
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-# ?? ??
 server:
   port: 8083
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
 
-# ?? ??
 logging:
   level:
     com.subway.analytics: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.cache: DEBUG
 
 management:
@@ -68,6 +65,3 @@ management:
   endpoint:
     health:
       show-details: always
-  health:
-    defaults:
-      enabled: true

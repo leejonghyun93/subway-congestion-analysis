@@ -1,25 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Box,
-    TextField,
-    MenuItem,
-    CircularProgress,
-    Typography,
-} from '@mui/material';
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from 'recharts';
+import { Box, TextField, MenuItem, CircularProgress, Typography } from '@mui/material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { analyticsService } from '../../services/analyticsService';
 
 const StatisticsChart = () => {
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [line, setLine] = useState('2');
     const [station, setStation] = useState('강남역');
     const [data, setData] = useState([]);
@@ -31,25 +16,19 @@ const StatisticsChart = () => {
     const loadStatistics = async () => {
         setLoading(true);
         try {
-            const response = await analyticsService.getHourlyStatistics(line, station);
+            const response = await analyticsService.getHourlyStatistics(station, line);
 
             if (response.data.success && response.data.data) {
                 const statsData = response.data.data;
-
-                // 0-23시 데이터 생성
                 const hourlyData = Array.from({ length: 24 }, (_, hour) => {
                     const hourStats = statsData.find(s => s.hour === hour);
-                    const congestion = hourStats?.avgCongestion || 0;
-
                     return {
                         hour: `${hour}시`,
-                        congestion: typeof congestion === 'number' ? congestion : 0,
+                        congestion: hourStats?.avgCongestion || 0,
                     };
                 });
-
                 setData(hourlyData);
             } else {
-                // 데이터가 없으면 빈 배열
                 setData([]);
             }
         } catch (error) {
@@ -62,7 +41,6 @@ const StatisticsChart = () => {
 
     return (
         <Box>
-            {/* 필터 */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
                     select
@@ -87,7 +65,6 @@ const StatisticsChart = () => {
                 />
             </Box>
 
-            {/* 차트 */}
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <CircularProgress />
@@ -97,19 +74,10 @@ const StatisticsChart = () => {
                     <LineChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="hour" />
-                        <YAxis
-                            label={{ value: '혼잡도 (%)', angle: -90, position: 'insideLeft' }}
-                            domain={[0, 100]}
-                        />
+                        <YAxis label={{ value: '혼잡도 (%)', angle: -90, position: 'insideLeft' }} domain={[0, 100]} />
                         <Tooltip />
                         <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="congestion"
-                            stroke="#8884d8"
-                            activeDot={{ r: 8 }}
-                            name="평균 혼잡도"
-                        />
+                        <Line type="monotone" dataKey="congestion" stroke="#8884d8" activeDot={{ r: 8 }} name="평균 혼잡도" />
                     </LineChart>
                 </ResponsiveContainer>
             ) : (

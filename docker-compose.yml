@@ -178,4 +178,4 @@ volumes:
 
 networks:
   subway-network:
-    driver: bridgeminikube version
+    driver: bridge
