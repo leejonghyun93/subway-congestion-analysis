@@ -31,13 +31,20 @@ const StationSearch = () => {
         }
 
         setLoading(true);
+
         try {
-            // 실시간 데이터 조회
-            const realtimeResponse = await analyticsService.getRealtimeCongestion(lineNumber, stationName);
+            // 실시간 혼잡도 조회
+            const realtimeResponse = await analyticsService.getRealtimeCongestionData(
+                lineNumber,
+                stationName
+            );
             setRealtimeData(realtimeResponse.data.data);
 
             // 예측 데이터 조회
-            const predictionResponse = await predictionService.predictNow(lineNumber, stationName);
+            const predictionResponse = await predictionService.predictNow(
+                lineNumber,
+                stationName
+            );
             setPredictionData(predictionResponse.data.data);
         } catch (error) {
             console.error('Search failed:', error);
@@ -107,10 +114,18 @@ const StationSearch = () => {
                                             실시간 혼잡도
                                         </Typography>
                                         <Typography variant="h3" color="primary">
-                                            {realtimeData.congestion ? `${realtimeData.congestion.toFixed(1)}%` : 'N/A'}
+                                            {realtimeData.avgCongestion !== undefined &&
+                                            realtimeData.avgCongestion !== null
+                                                ? `${realtimeData.avgCongestion.toFixed(1)}%`
+                                                : 'N/A'}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                            {realtimeData.stationName} ({realtimeData.lineNumber}호선)
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{ mt: 1 }}
+                                        >
+                                            {realtimeData.stationName} (
+                                            {realtimeData.lineNumber}호선)
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -126,8 +141,13 @@ const StationSearch = () => {
                                             <Typography variant="h3" color="secondary">
                                                 {predictionData.predictedCongestion.toFixed(1)}%
                                             </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                                신뢰도: {(predictionData.confidence * 100).toFixed(1)}%
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ mt: 1 }}
+                                            >
+                                                신뢰도:{' '}
+                                                {(predictionData.confidence * 100).toFixed(1)}%
                                             </Typography>
                                         </CardContent>
                                     </Card>

@@ -5,35 +5,45 @@ import { analyticsService } from '../../services/analyticsService';
 
 const StatisticsChart = () => {
     const [loading, setLoading] = useState(false);
-    const [line, setLine] = useState('2');
     const [station, setStation] = useState('강남역');
-    const [data, setData] = useState([]);
+    const [line, setLine] = useState('2');
+    const [hourlyData, setHourlyData] = useState([]);
+    const [realtime, setRealtime] = useState(null);
 
     useEffect(() => {
-        loadStatistics();
-    }, [line, station]);
+        loadData();
+    }, [station, line]);
 
-    const loadStatistics = async () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            const response = await analyticsService.getHourlyStatistics(station, line);
+            // 1️⃣ 실시간 혼잡도 호출
+            const realtimeResponse = await analyticsService.getRealtimeCongestion(station, line);
+            if (realtimeResponse.data.success && realtimeResponse.data.data) {
+                setRealtime(realtimeResponse.data.data);
+            } else {
+                setRealtime(null);
+            }
 
-            if (response.data.success && response.data.data) {
-                const statsData = response.data.data;
-                const hourlyData = Array.from({ length: 24 }, (_, hour) => {
+            // 2️⃣ 시간대별 혼잡도 호출
+            const hourlyResponse = await analyticsService.getHourlyStatistics(station, line);
+            if (hourlyResponse.data.success && hourlyResponse.data.data) {
+                const statsData = hourlyResponse.data.data;
+                const formatted = Array.from({ length: 24 }, (_, hour) => {
                     const hourStats = statsData.find(s => s.hour === hour);
                     return {
                         hour: `${hour}시`,
                         congestion: hourStats?.avgCongestion || 0,
                     };
                 });
-                setData(hourlyData);
+                setHourlyData(formatted);
             } else {
-                setData([]);
+                setHourlyData([]);
             }
         } catch (error) {
-            console.error('Failed to load statistics:', error);
-            setData([]);
+            console.error('Failed to load data:', error);
+            setHourlyData([]);
+            setRealtime(null);
         } finally {
             setLoading(false);
         }
@@ -41,6 +51,7 @@ const StatisticsChart = () => {
 
     return (
         <Box>
+            {/* 선택 필드 */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
                     select
@@ -65,19 +76,36 @@ const StatisticsChart = () => {
                 />
             </Box>
 
+            {/* 실시간 혼잡도 */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h6">
+                    {station} ({line}호선) 실시간 혼잡도: {realtime ? realtime.congestionLevel : '데이터 없음'}
+                </Typography>
+            </Box>
+
+            {/* 시간대별 혼잡도 차트 */}
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <CircularProgress />
                 </Box>
-            ) : data.length > 0 ? (
+            ) : hourlyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={data}>
+                    <LineChart data={hourlyData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="hour" />
-                        <YAxis label={{ value: '혼잡도 (%)', angle: -90, position: 'insideLeft' }} domain={[0, 100]} />
+                        <YAxis
+                            label={{ value: '혼잡도 (%)', angle: -90, position: 'insideLeft' }}
+                            domain={[0, 100]}
+                        />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="congestion" stroke="#8884d8" activeDot={{ r: 8 }} name="평균 혼잡도" />
+                        <Line
+                            type="monotone"
+                            dataKey="congestion"
+                            stroke="#8884d8"
+                            activeDot={{ r: 8 }}
+                            name="평균 혼잡도"
+                        />
                     </LineChart>
                 </ResponsiveContainer>
             ) : (

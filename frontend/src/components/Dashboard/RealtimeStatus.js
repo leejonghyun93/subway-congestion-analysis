@@ -25,7 +25,7 @@ const RealtimeStatus = () => {
 
             let data = response.data.data || [];
 
-            // ✅ 데이터가 없으면 Mock 데이터 사용
+            //  데이터가 없으면 Mock 데이터 사용
             if (!data || data.length === 0) {
                 console.log('No realtime data, using mock data');
                 data = [

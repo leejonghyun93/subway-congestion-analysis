@@ -32,7 +32,7 @@ public class ChatbotController {
 
         try {
             ChatResponse response = chatbotService.chat(request);
-            return ResponseEntity.ok(ApiResponse.success("응답 생성 완료", response)); 
+            return ResponseEntity.ok(ApiResponse.success("응답 생성 완료", response));
         } catch (Exception e) {
             log.error("Chat failed: {}", e.getMessage(), e);
             return ResponseEntity.ok(ApiResponse.error("챗봇 응답 생성 실패: " + e.getMessage()));
@@ -47,7 +47,7 @@ public class ChatbotController {
         log.info("Get history: sessionId={}", sessionId);
 
         List<ChatHistory> history = chatHistoryRepository.findBySessionIdOrderByTimestampDesc(sessionId);
-        return ResponseEntity.ok(ApiResponse.success("채팅 이력 조회 완료", history));  
+        return ResponseEntity.ok(ApiResponse.success("채팅 이력 조회 완료", history));
     }
 
     /**

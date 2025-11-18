@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "analytics-service", url = "${services.analytics.url}")
 public interface AnalyticsClient {
 
-    @GetMapping("/api/analytics/realtime/{stationName}")
+    @GetMapping("/api/analytics/realtime/{stationName}/data")
     ApiResponse<Object> getRealtimeCongestion(
             @PathVariable String stationName,
-            @RequestParam String lineNumber
+            @RequestParam(required = false) String lineNumber
     );
 
     @GetMapping("/api/analytics/statistics/hourly")

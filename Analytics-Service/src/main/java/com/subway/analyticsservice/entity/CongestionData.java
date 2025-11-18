@@ -25,7 +25,7 @@ public class CongestionData {
     private String lineNumber;
 
     @Column(name = "congestion_level")
-    private Double congestionLevel;
+    private Double congestionLevel;  // 숫자(Double)
 
     @Column(name = "passenger_count")
     private Integer passengerCount;

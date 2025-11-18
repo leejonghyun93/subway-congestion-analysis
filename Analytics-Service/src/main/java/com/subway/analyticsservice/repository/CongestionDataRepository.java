@@ -20,4 +20,6 @@ public interface CongestionDataRepository extends JpaRepository<CongestionData, 
 
     // TOP 혼잡역 조회
     List<CongestionData> findByTimestampAfter(LocalDateTime timestamp);
+
+    CongestionData findTopByStationNameOrderByTimestampDesc(String stationName);
 }

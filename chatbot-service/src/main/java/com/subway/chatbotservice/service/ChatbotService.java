@@ -180,14 +180,18 @@ public class ChatbotService {
             try {
                 Map<String, Object> dataMap = (Map<String, Object>) data;
 
-                // ✅ 안전한 값 추출
                 String stationName = getStringValue(dataMap, "stationName", "알 수 없음");
                 String lineNumber = getStringValue(dataMap, "lineNumber", "");
-                Double congestionLevel = getDoubleValue(dataMap, "congestionLevel", 0.0);
+
+                // ✅ congestionLevel이 문자이면 avgCongestion을 우선 사용
+                Double avgCongestion = getDoubleValue(dataMap, "avgCongestion", null);
+                Double congestionLevelValue = avgCongestion != null ? avgCongestion :
+                        parseDouble(dataMap.get("congestionLevel"));
+
                 Integer passengerCount = getIntValue(dataMap, "passengerCount", 0);
 
-                String status = getCongestionStatus(congestionLevel);
-                String emoji = getCongestionEmoji(congestionLevel);
+                String status = getCongestionStatus(congestionLevelValue);
+                String emoji = getCongestionEmoji(congestionLevelValue);
 
                 StringBuilder response = new StringBuilder();
                 response.append(emoji).append(" ").append(stationName);
@@ -195,10 +199,10 @@ public class ChatbotService {
                     response.append(" (").append(lineNumber).append("호선)");
                 }
                 response.append(" 실시간 혼잡도\n\n");
-                response.append("혼잡도: ").append(String.format("%.1f%%", congestionLevel)).append("\n");
+                response.append("혼잡도: ").append(String.format("%.1f%%", congestionLevelValue)).append("\n");
                 response.append("승객 수: 약 ").append(passengerCount).append("명\n");
                 response.append("상태: ").append(status).append("\n\n");
-                response.append(getAdvice(congestionLevel));
+                response.append(getAdvice(congestionLevelValue));
 
                 return response.toString();
             } catch (Exception e) {
@@ -209,6 +213,7 @@ public class ChatbotService {
 
         return "실시간 혼잡도 정보:\n\n" + data.toString();
     }
+
 
     // ✅ 안전한 값 추출 헬퍼 메서드들
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {

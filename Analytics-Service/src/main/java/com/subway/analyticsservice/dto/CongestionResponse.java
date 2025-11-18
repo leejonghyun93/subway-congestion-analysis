@@ -16,13 +16,14 @@ public class CongestionResponse implements Serializable {
     private String lineNumber;
     private String stationName;
     private Integer hourSlot;
-    private Double avgCongestion;
+    private Double avgCongestion; // 숫자 그대로
     private Double maxCongestion;
     private Double minCongestion;
     private Long dataCount;
-    private String congestionLevel;  // "여유", "보통", "혼잡", "매우혼잡"
+    private Integer passengerCount;
+    private String congestionLevel; // null로 두고 getter 사용
 
-    // 혼잡도 레벨 자동 계산
+    // React용 상태 문자열 계산
     public String getCongestionLevel() {
         if (avgCongestion == null) return "데이터 없음";
         if (avgCongestion < 30) return "여유";
