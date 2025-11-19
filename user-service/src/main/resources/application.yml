@@ -2,7 +2,6 @@ spring:
   application:
     name: user-service
 
-  # PostgreSQL ??
   datasource:
     url: jdbc:postgresql://localhost:5432/subway_analytics
     username: postgres
@@ -13,7 +12,6 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
 
-  # JPA ??
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -24,14 +22,12 @@ spring:
         format_sql: true
         use_sql_comments: true
 
-  # Redis ?? (Refresh Token ??)
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 3000ms
 
-# Eureka ??
 eureka:
   client:
     service-url:
@@ -42,17 +38,14 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-# ?? ??
 server:
   port: 8088
 
-# JWT ??
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForSubwayCongestionSystemVeryLongSecretKey123456789}
-  access-token-expiration: 3600000      # 1?? (???)
-  refresh-token-expiration: 604800000   # 7? (???)
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
 
-# ?? ??
 logging:
   level:
     com.subway.userservice: INFO

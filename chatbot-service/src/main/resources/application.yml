@@ -25,12 +25,12 @@ eureka:
 server:
   port: 8085
 
-# Ollama 비활성화!
+# Ollama
 ollama:
-  enabled: false  # ← 이게 false인지 확인!
+  enabled: true
   base-url: http://localhost:11434
   model: llama3.2:3b
-  timeout: 60s
+
 
 services:
   analytics:
