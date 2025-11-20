@@ -71,7 +71,7 @@ public class DataFetchService {
 
     public Object fetchTopCongested(int limit) {
         try {
-            log.info("🔍 Calling Top Congested API: limit={}", limit);
+            log.info("Calling Top Congested API: limit={}", limit);
 
             ApiResponse<Object> response = analyticsClient.getTopCongestedStations(limit);
 

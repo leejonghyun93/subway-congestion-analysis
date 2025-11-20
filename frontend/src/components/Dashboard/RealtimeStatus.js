@@ -41,7 +41,7 @@ const RealtimeStatus = () => {
         } catch (error) {
             console.error('Failed to load realtime data:', error);
 
-            // ✅ 에러 시 Mock 데이터
+            // 에러 시 Mock 데이터
             setStations([
                 { stationName: '강남역', lineNumber: '2', congestionLevel: 85.5, passengerCount: 1650 },
                 { stationName: '홍대입구역', lineNumber: '2', congestionLevel: 78.3, passengerCount: 1420 },
@@ -95,7 +95,7 @@ const RealtimeStatus = () => {
                 const passengerCount = formatPassengerCount(station?.passengerCount);
 
                 return (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>

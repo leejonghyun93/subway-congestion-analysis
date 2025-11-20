@@ -183,7 +183,7 @@ public class ChatbotService {
                 String stationName = getStringValue(dataMap, "stationName", "알 수 없음");
                 String lineNumber = getStringValue(dataMap, "lineNumber", "");
 
-                // ✅ congestionLevel이 문자이면 avgCongestion을 우선 사용
+                // congestionLevel이 문자이면 avgCongestion을 우선 사용
                 Double avgCongestion = getDoubleValue(dataMap, "avgCongestion", null);
                 Double congestionLevelValue = avgCongestion != null ? avgCongestion :
                         parseDouble(dataMap.get("congestionLevel"));
@@ -215,7 +215,7 @@ public class ChatbotService {
     }
 
 
-    // ✅ 안전한 값 추출 헬퍼 메서드들
+    //  안전한 값 추출 헬퍼 메서드들
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
         Object value = map.get(key);
         if (value == null) {

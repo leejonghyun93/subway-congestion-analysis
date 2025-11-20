@@ -66,7 +66,7 @@ public class EmailService {
         return String.format("""
                 <html>
                 <body style="font-family: Arial, sans-serif;">
-                    <h2 style="color: #d32f2f;">🚇 지하철 혼잡도 알림</h2>
+                    <h2 style="color: #d32f2f;">지하철 혼잡도 알림</h2>
                     <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
                         <p><strong>호선:</strong> %s호선</p>
                         <p><strong>역:</strong> %s</p>

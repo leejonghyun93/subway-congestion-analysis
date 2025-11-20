@@ -48,19 +48,18 @@ const Dashboard = () => {
             </Paper>
 
             <Box sx={{ display: 'flex', gap: 3 }}>
-                {/* 왼쪽 영역 */}
                 <Box sx={{ flex: '1 1 66%' }}>
                     <Paper sx={{ p: 3, mb: 3 }}>
                         <Typography variant="h6" gutterBottom>실시간 혼잡도 현황</Typography>
                         <RealtimeStatus />
                     </Paper>
+
                     <Paper sx={{ p: 3 }}>
                         <Typography variant="h6" gutterBottom>시간대별 평균 혼잡도</Typography>
-                        <StatisticsChart />
+                        <StatisticsChart stationName="강남역" lineNumber="2" />
                     </Paper>
                 </Box>
 
-                {/* 오른쪽 영역 */}
                 <Stack spacing={1.5} sx={{ flex: '1 1 34%' }}>
                     <Paper sx={{ p: 2 }}>
                         <Typography variant="h6" sx={{ mb: 1, fontSize: '1.1rem' }}>TOP 5 혼잡역</Typography>

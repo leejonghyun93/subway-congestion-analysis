@@ -18,7 +18,6 @@ export const analyticsService = {
         api.get('/api/analytics/hourly', {
             params: { stationName, lineNumber },
         }),
-
     // 상위 혼잡역 조회
     getTopCongestedStations: (limit = 10) =>
         api.get('/api/analytics/top-congested', { params: { limit } }),

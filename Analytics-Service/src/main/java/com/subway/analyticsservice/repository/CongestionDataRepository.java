@@ -22,4 +22,7 @@ public interface CongestionDataRepository extends JpaRepository<CongestionData, 
     List<CongestionData> findByTimestampAfter(LocalDateTime timestamp);
 
     CongestionData findTopByStationNameOrderByTimestampDesc(String stationName);
+
+    List<CongestionData> findByStationNameAndLineNumberAndTimestampAfterOrderByTimestampAsc(
+            String stationName, String lineNumber, LocalDateTime timestamp);
 }

@@ -3,12 +3,11 @@ import { Box, TextField, MenuItem, CircularProgress, Typography } from '@mui/mat
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { analyticsService } from '../../services/analyticsService';
 
-const StatisticsChart = () => {
+const StatisticsChart = ({ stationName = '강남역', lineNumber = '2' }) => {
     const [loading, setLoading] = useState(false);
-    const [station, setStation] = useState('강남역');
-    const [line, setLine] = useState('2');
+    const [station, setStation] = useState(stationName);
+    const [line, setLine] = useState(lineNumber);  // props 사용
     const [hourlyData, setHourlyData] = useState([]);
-    const [realtime, setRealtime] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -17,16 +16,11 @@ const StatisticsChart = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            // 1️⃣ 실시간 혼잡도 호출
-            const realtimeResponse = await analyticsService.getRealtimeCongestion(station, line);
-            if (realtimeResponse.data.success && realtimeResponse.data.data) {
-                setRealtime(realtimeResponse.data.data);
-            } else {
-                setRealtime(null);
-            }
+            console.log('Fetching data for:', station, line);
 
-            // 2️⃣ 시간대별 혼잡도 호출
             const hourlyResponse = await analyticsService.getHourlyStatistics(station, line);
+            console.log('API Response:', hourlyResponse);
+
             if (hourlyResponse.data.success && hourlyResponse.data.data) {
                 const statsData = hourlyResponse.data.data;
                 const formatted = Array.from({ length: 24 }, (_, hour) => {
@@ -38,12 +32,12 @@ const StatisticsChart = () => {
                 });
                 setHourlyData(formatted);
             } else {
+                console.warn('No data in response');
                 setHourlyData([]);
             }
         } catch (error) {
             console.error('Failed to load data:', error);
             setHourlyData([]);
-            setRealtime(null);
         } finally {
             setLoading(false);
         }
@@ -51,7 +45,6 @@ const StatisticsChart = () => {
 
     return (
         <Box>
-            {/* 선택 필드 */}
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
                     select
@@ -76,14 +69,6 @@ const StatisticsChart = () => {
                 />
             </Box>
 
-            {/* 실시간 혼잡도 */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h6">
-                    {station} ({line}호선) 실시간 혼잡도: {realtime ? realtime.congestionLevel : '데이터 없음'}
-                </Typography>
-            </Box>
-
-            {/* 시간대별 혼잡도 차트 */}
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <CircularProgress />
