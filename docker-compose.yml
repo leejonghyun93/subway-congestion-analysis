@@ -55,6 +55,21 @@ services:
     networks:
       - subway-network
 
+  # PostgreSQL for Analytics (추가 - 기존에 없었음)
+  postgresql:
+    image: postgres:16
+    container_name: subway-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: subway_analytics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - subway-network
+
   # PostgreSQL for Airflow
   postgres-airflow:
     image: postgres:14
@@ -75,7 +90,7 @@ services:
       retries: 5
       start_period: 5s
 
-  # Airflow Init (DB 초기화 및 Admin 계정 생성)
+  # Airflow Init
   airflow-init:
     image: apache/airflow:2.7.3
     container_name: subway-airflow-init
@@ -171,10 +186,50 @@ services:
       retries: 5
       start_period: 30s
 
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: subway-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - subway-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: subway-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - subway-network
+
 volumes:
   mongodb_data:
   redis_data:
+  postgres_data:
   airflow-postgres-data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   subway-network:
