@@ -10,7 +10,9 @@ import Dashboard from './components/Dashboard/Dashboard';
 import StationSearch from './components/Search/StationSearch';
 import ChatInterface from './components/Chatbot/ChatInterface';
 import Login from './components/Auth/Login';
-import Signup from './components/Auth/Signup';  // 추가
+import Signup from './components/Auth/Signup';
+import NotificationSettings from './components/Notification/NotificationSettings';
+import NotificationHistory from './components/Notification/NotificationHistory';
 
 const theme = createTheme({
     palette: {
@@ -75,6 +77,8 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/notifications" element={<NotificationSettings />} />
+                <Route path="/notifications/history" element={<NotificationHistory />} />
             </Routes>
         </Router>
     );
