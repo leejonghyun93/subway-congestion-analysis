@@ -32,6 +32,12 @@ spring:
           max-active: 10
           max-idle: 5
           min-idle: 2
+  cassandra:
+    keyspace-name: subway_analytics
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: none
 
 eureka:
   client:

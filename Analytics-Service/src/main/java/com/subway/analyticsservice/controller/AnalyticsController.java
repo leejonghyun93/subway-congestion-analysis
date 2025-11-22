@@ -4,8 +4,13 @@ import com.subway.analyticsservice.dto.ApiResponse;
 import com.subway.analyticsservice.dto.CongestionResponse;
 import com.subway.analyticsservice.entity.CongestionData;
 import com.subway.analyticsservice.service.AnalyticsService;
+import com.subway.analyticsservice.service.CassandraService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analytics")
@@ -13,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
+
+    private final CassandraService cassandraService;
 
     @GetMapping("/top-congested")
     public ApiResponse<?> getTopCongestedStations(@RequestParam(defaultValue = "10") int limit) {
@@ -64,6 +71,36 @@ public class AnalyticsController {
         return ApiResponse.success(response);
     }
 
+    // Cassandra 테스트 - 데이터 저장
+    @PostMapping("/cassandra/save")
+    public ResponseEntity<?> saveToCassandra(
+            @RequestParam String stationName,
+            @RequestParam String lineNumber,
+            @RequestParam Double congestionLevel,
+            @RequestParam(defaultValue = "0") Integer passengerCount) {
 
+        cassandraService.saveCongestionData(stationName, lineNumber, congestionLevel, passengerCount);
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Data saved to Cassandra",
+                "station", stationName,
+                "congestion", congestionLevel
+        ));
+    }
+
+    // Cassandra 테스트 - 오늘 데이터 조회
+    @GetMapping("/cassandra/today")
+    public ResponseEntity<?> getTodayFromCassandra(
+            @RequestParam String stationName,
+            @RequestParam String lineNumber) {
+
+        return ResponseEntity.ok(cassandraService.getTodayData(stationName, lineNumber));
+    }
+
+    // Cassandra 테스트 - 실시간 조회
+    @GetMapping("/cassandra/realtime/{lineNumber}")
+    public ResponseEntity<?> getRealtimeFromCassandra(@PathVariable String lineNumber) {
+        return ResponseEntity.ok(cassandraService.getRealtimeByLine(lineNumber));
+    }
 
 }
