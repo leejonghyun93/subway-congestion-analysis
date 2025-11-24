@@ -43,8 +43,8 @@ const Dashboard = () => {
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Paper sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                <Typography variant="h4">실시간 대시보드</Typography>
-                <Typography variant="body1">지하철 혼잡도 모니터링 시스템</Typography>
+                <Typography variant="h4">지하철 혼잡도 대시보드</Typography>
+                <Typography variant="body1">실제 데이터 기반 혼잡도 분석 및 모니터링</Typography>
             </Paper>
 
             <Box sx={{ display: 'flex', gap: 3 }}>

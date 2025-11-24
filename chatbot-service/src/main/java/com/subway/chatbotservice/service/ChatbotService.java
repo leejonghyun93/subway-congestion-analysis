@@ -71,8 +71,9 @@ public class ChatbotService {
         String lineNumber = intentResult.getLineNumber();
         String stationName = intentResult.getStationName();
 
-        if (stationName != null && !stationName.endsWith("역")) {
-            stationName = stationName + "역";
+        // "역" 제거 (MongoDB에는 "역" 없이 저장되어 있음)
+        if (stationName != null && stationName.endsWith("역")) {
+            stationName = stationName.substring(0, stationName.length() - 1);
         }
 
         log.info("Fetching data: intent={}, station={}, line={}", intent, stationName, lineNumber);
@@ -101,7 +102,7 @@ public class ChatbotService {
             prompt.append(data.toString()).append("\n\n");
             prompt.append("위 데이터를 바탕으로 사용자에게 친절하고 자세하게 답변해주세요.");
         } else {
-            prompt.append("데이터를 가져올 수 없습니다. 사용자에게 정중하게 알려주세요.");
+            prompt.append("해당 역의 데이터를 찾을 수 없습니다. 사용자에게 역 이름을 확인하도록 정중하게 요청해주세요.");
         }
 
         return prompt.toString();
@@ -116,21 +117,34 @@ public class ChatbotService {
                 if (data != null) {
                     return formatRealtimeData(data);
                 } else {
-                    return "죄송합니다. 현재 혼잡도 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.";
+                    String stationName = intentResult.getStationName();
+                    if (stationName == null || stationName.isEmpty()) {
+                        return "역 이름을 알려주세요.\n예: 강남역 혼잡도 알려줘";
+                    }
+                    return String.format("죄송합니다. '%s역' 정보를 찾을 수 없습니다.\n역 이름을 확인해주세요.",
+                            stationName);
                 }
 
             case "PREDICTION":
                 if (data != null) {
                     return formatPredictionData(data);
                 } else {
-                    return "죄송합니다. 예측 정보를 가져올 수 없습니다.";
+                    String stationName = intentResult.getStationName();
+                    if (stationName == null || stationName.isEmpty()) {
+                        return "역 이름을 알려주세요.\n예: 강남역 예측해줘";
+                    }
+                    return String.format("죄송합니다. '%s역' 예측 정보를 찾을 수 없습니다.", stationName);
                 }
 
             case "STATISTICS":
                 if (data != null) {
                     return formatStatisticsData(data);
                 } else {
-                    return "죄송합니다. 통계 정보를 가져올 수 없습니다.";
+                    String stationName = intentResult.getStationName();
+                    if (stationName == null || stationName.isEmpty()) {
+                        return "역 이름을 알려주세요.\n예: 강남역 통계 보여줘";
+                    }
+                    return String.format("죄송합니다. '%s역' 통계 정보를 찾을 수 없습니다.", stationName);
                 }
 
             case "TOP_CONGESTED":
@@ -170,7 +184,7 @@ public class ChatbotService {
         }
     }
 
-
+    // 나머지 메서드들은 그대로...
     private String formatRealtimeData(Object data) {
         if (data == null) {
             return "죄송합니다. 혼잡도 정보를 가져올 수 없습니다.";
@@ -183,7 +197,6 @@ public class ChatbotService {
                 String stationName = getStringValue(dataMap, "stationName", "알 수 없음");
                 String lineNumber = getStringValue(dataMap, "lineNumber", "");
 
-                // congestionLevel이 문자이면 avgCongestion을 우선 사용
                 Double avgCongestion = getDoubleValue(dataMap, "avgCongestion", null);
                 Double congestionLevelValue = avgCongestion != null ? avgCongestion :
                         parseDouble(dataMap.get("congestionLevel"));
@@ -214,8 +227,6 @@ public class ChatbotService {
         return "실시간 혼잡도 정보:\n\n" + data.toString();
     }
 
-
-    //  안전한 값 추출 헬퍼 메서드들
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
         Object value = map.get(key);
         if (value == null) {
@@ -359,7 +370,6 @@ public class ChatbotService {
             return 0;
         }
     }
-
 
     private void saveChatHistory(ChatRequest request, String response,
                                  IntentResult intentResult, String sessionId, long responseTime) {

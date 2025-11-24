@@ -21,11 +21,16 @@ eureka:
 server:
   port: 8081
 
-#  더미 API 설정 추가
-subway:
+# 서울시 API 설정 (환경변수)
+seoul:
   api:
-    key: dummy-key-not-used
-    url: http://openapi.seoul.go.kr:8088
+    key: ${SEOUL_API_KEY:dummy-key-not-used}  # 환경변수 우선, 없으면 기본값
+    url: ${SEOUL_API_URL:http://swopenAPI.seoul.go.kr/api/subway}
+
+# 데이터 소스 설정 (환경변수)
+subway:
+  data:
+    source: ${DATA_SOURCE:mock}  # mock 또는 real
 
 # Mock 데이터 설정
 mock:

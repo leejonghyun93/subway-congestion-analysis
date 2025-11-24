@@ -3,10 +3,10 @@ import { Box, TextField, MenuItem, CircularProgress, Typography } from '@mui/mat
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { analyticsService } from '../../services/analyticsService';
 
-const StatisticsChart = ({ stationName = '강남역', lineNumber = '2' }) => {
+const StatisticsChart = ({ stationName = '강남', lineNumber = '2' }) => {
     const [loading, setLoading] = useState(false);
     const [station, setStation] = useState(stationName);
-    const [line, setLine] = useState(lineNumber);  // props 사용
+    const [line, setLine] = useState(lineNumber);
     const [hourlyData, setHourlyData] = useState([]);
 
     useEffect(() => {
@@ -16,9 +16,12 @@ const StatisticsChart = ({ stationName = '강남역', lineNumber = '2' }) => {
     const loadData = async () => {
         setLoading(true);
         try {
-            console.log('Fetching data for:', station, line);
+            // "역" 제거
+            const cleanStation = station.replace(/역$/g, '').trim();
 
-            const hourlyResponse = await analyticsService.getHourlyStatistics(station, line);
+            console.log('Fetching data for:', cleanStation, line);
+
+            const hourlyResponse = await analyticsService.getHourlyStatistics(cleanStation, line);
             console.log('API Response:', hourlyResponse);
 
             if (hourlyResponse.data.success && hourlyResponse.data.data) {
@@ -64,8 +67,9 @@ const StatisticsChart = ({ stationName = '강남역', lineNumber = '2' }) => {
                     label="역 이름"
                     value={station}
                     onChange={(e) => setStation(e.target.value)}
-                    placeholder="예: 강남역"
+                    placeholder="예: 강남 또는 강남역"
                     size="small"
+                    helperText="역 이름만 입력 (예: 강남, 홍대입구)"
                 />
             </Box>
 
@@ -95,7 +99,7 @@ const StatisticsChart = ({ stationName = '강남역', lineNumber = '2' }) => {
                 </ResponsiveContainer>
             ) : (
                 <Typography variant="body1" color="text.secondary" align="center" sx={{ p: 4 }}>
-                    데이터가 없습니다.
+                    데이터가 없습니다. 역 이름을 확인해주세요.
                 </Typography>
             )}
         </Box>
