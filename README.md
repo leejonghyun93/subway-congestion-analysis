@@ -46,13 +46,13 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 
 ## 시스템 아키텍처
 
-![System Architecture](images/architecture.jpg)
+![System Architecture](images/architecture.png)
 
 ### 데이터 파이프라인 및 ML 흐름도 
 
 실시간 데이터 수집부터 ML 예측까지의 전체 파이프라인 구성
 
-![데이터 파이프라인 및 ML 흐름도](images/architecture-diagram.jpg)
+![데이터 파이프라인 및 ML 흐름도](images/architecture-diagram.png)
 
 ### 주요 구성 요소
 
