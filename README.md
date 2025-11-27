@@ -48,7 +48,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 
 ![System Architecture](images/architecture.png)
 
-### 데이터 파이프라인 및 ML 흐름도 
+### 데이터 파이프라인 및 ML 흐름도
 
 실시간 데이터 수집부터 ML 예측까지의 전체 파이프라인 구성
 
@@ -593,3 +593,356 @@ subway-congestion-system/
 **총 리소스**
 - CPU: 약 30%
 - 메모리: 약 8 GB
+
+---
+
+## 테스트 및 성능 측정 방법
+
+### 테스트 환경
+
+| 항목 | 내용 |
+|------|------|
+| **OS** | Windows 11 |
+| **개발 도구** | IntelliJ IDEA, Visual Studio Code |
+| **터미널** | Windows CMD |
+| **API 테스트** | curl, Postman |
+| **성능 측정** | kafka-producer-perf-test, curl --write-out |
+| **컨테이너 관리** | Docker Desktop, Kubernetes (Minikube) |
+
+---
+
+### 1. Kafka 스트림 처리 성능 테스트
+
+#### **테스트 방법**
+
+Windows CMD에서 `kafka-producer-perf-test` 명령어를 사용하여 10,000건의 테스트 데이터를 전송하고 처리 성능을 측정했습니다.
+
+```cmd
+kafka-producer-perf-test ^
+  --topic congestion-data ^
+  --num-records 10000 ^
+  --record-size 1024 ^
+  --throughput -1 ^
+  --producer-props bootstrap.servers=localhost:9092
+```
+
+#### **테스트 결과**
+
+| 지표 | 값 |
+|------|-----|
+| 처리량 | **1,755 records/sec** |
+| 평균 지연 | **1.47초** |
+| 최대 지연 | 2.65초 |
+| 95th percentile | 2.53초 |
+| 총 처리 메시지 | 102,083개 |
+
+---
+
+### 2. API 응답 시간 측정
+
+Windows CMD에서 `curl` 명령어의 `--write-out` 옵션을 사용하여 각 API의 응답 시간을 측정했습니다.
+
+#### **2.1. 실시간 혼잡도 조회 (PostgreSQL)**
+
+```cmd
+curl -X GET "http://localhost:8080/api/analytics/congestion/real-time?stationName=강남역&lineNumber=2" -w "\nTime: %{time_total}s\n"
+```
+
+**결과:** 1.15초
+
+---
+
+#### **2.2. TOP 혼잡역 조회**
+
+```cmd
+curl -X GET "http://localhost:8080/api/analytics/congestion/top?limit=10" -w "\nTime: %{time_total}s\n"
+```
+
+**결과:** 0.45초
+
+---
+
+#### **2.3. Cassandra 시계열 조회**
+
+```cmd
+curl -X GET "http://localhost:8080/api/analytics/timeseries/line/2" -w "\nTime: %{time_total}s\n"
+```
+
+**결과:** 0.19초
+
+---
+
+#### **2.4. AI 챗봇 응답**
+
+```cmd
+curl -X POST "http://localhost:8080/api/chatbot/chat" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"강남역 지금 혼잡해?\",\"sessionId\":\"test123\"}" ^
+  -w "\nTime: %{time_total}s\n"
+```
+
+**결과:** 0.78초
+
+---
+
+#### **2.5. Redis Health Check**
+
+```cmd
+curl -X GET "http://localhost:8080/api/cache/health" -w "\nTime: %{time_total}s\n"
+```
+
+**결과:** 0.04초
+
+---
+
+### 3. Kubernetes 배포 상태 확인
+
+#### **3.1. Minikube 상태 확인**
+
+```cmd
+minikube status
+```
+
+**결과:**
+```
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+---
+
+#### **3.2. 노드 상태 확인**
+
+```cmd
+kubectl get nodes
+```
+
+**결과:**
+```
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   11d   v1.34.0
+```
+
+**확인 사항:**
+- 클러스터 운영 기간: 11일
+- 노드 상태: Ready
+- Kubernetes 버전: v1.34.0
+
+---
+
+#### **3.3. Namespace 확인**
+
+```cmd
+kubectl get namespaces
+```
+
+**결과:**
+```
+NAME                   STATUS   AGE
+default                Active   11d
+kube-system            Active   11d
+subway-system          Active   11d
+kubernetes-dashboard   Active   5d22h
+```
+
+---
+
+#### **3.4. 서비스 배포 확인**
+
+```cmd
+kubectl get services -n subway-system
+```
+
+**결과:**
+```
+NAME                   TYPE        CLUSTER-IP       PORT(S)            AGE
+analytics-service      ClusterIP   *************    8083/TCP           10d
+api-gateway            NodePort    *************    8080:30108/TCP     5d21h
+chatbot-service        ClusterIP   *************    8085/TCP           6d19h
+eureka-server          NodePort    *************   8761:31796/TCP     5d21h
+mongodb                ClusterIP   *************    27017/TCP          6d19h
+notification-service   ClusterIP   *************     8086/TCP           5d20h
+postgresql             ClusterIP   *************    5432/TCP           11d
+redis                  ClusterIP   *************    6379/TCP           11d
+```
+
+**확인 사항:**
+- 총 8개 서비스 배포
+- NodePort: api-gateway (30108), eureka-server (31796)
+- ClusterIP: 내부 서비스 통신
+
+---
+
+#### **3.5. Pod 상태 확인**
+
+```cmd
+kubectl get pods -n subway-system
+```
+
+**결과:**
+```
+NAME                                    READY   STATUS    RESTARTS       AGE
+analytics-service-867455bcbf-9qjp5      1/1     Running   4 (5d4h ago)   5d20h
+analytics-service-867455bcbf-xdcvh      1/1     Running   4 (5d4h ago)   5d20h
+api-gateway-85948cb84-j962h             1/1     Running   1 (5d4h ago)   5d20h
+api-gateway-85948cb84-qjgf8             1/1     Running   1 (5d4h ago)   5d20h
+chatbot-service-59898589d6-dbpx9        1/1     Running   2 (5d4h ago)   6d19h
+chatbot-service-59898589d6-mkd4s        1/1     Running   2 (5d4h ago)   6d19h
+eureka-server-ccd58d849-fltcd           1/1     Running   1 (5d4h ago)   5d20h
+mongodb-55778c458b-rxtn6                1/1     Running   2 (5d4h ago)   6d19h
+notification-service-6d8858f7b4-qfhp2   1/1     Running   6 (5d4h ago)   5d20h
+postgresql-d557cb5dc-b2ltq              1/1     Running   6 (5d4h ago)   11d
+redis-67975c49c9-mm592                  1/1     Running   6 (5d4h ago)   11d
+```
+
+**확인 사항:**
+- 총 11개 Pod 실행 중
+- 고가용성 구성: analytics (2), api-gateway (2), chatbot (2)
+- 모든 Pod 상태: Running
+- 최장 운영: 11일 (postgresql, redis)
+
+---
+
+#### **3.6. Deployment 상태 확인**
+
+```cmd
+kubectl get deployments -n subway-system
+```
+
+**결과:**
+```
+NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+analytics-service      2/2     2            2           5d20h
+api-gateway            2/2     2            2           5d20h
+chatbot-service        2/2     2            2           6d19h
+eureka-server          1/1     1            1           5d20h
+mongodb                1/1     1            1           6d19h
+notification-service   1/1     1            1           5d20h
+postgresql             1/1     1            1           11d
+redis                  1/1     1            1           11d
+```
+
+**확인 사항:**
+- 총 8개 Deployment
+- Replica 2개: analytics, api-gateway, chatbot
+- 모두 정상 배포 (READY = AVAILABLE)
+
+---
+
+### 4. Docker 컨테이너 리소스 모니터링
+
+#### **4.1. 컨테이너 상태 확인**
+
+```cmd
+docker ps
+```
+
+**결과:** 15개 컨테이너 실행 중
+
+---
+
+#### **4.2. 리소스 사용량 확인**
+
+```cmd
+docker stats
+```
+
+**주요 컨테이너 리소스 사용량:**
+
+| 컨테이너 | CPU | 메모리 |
+|----------|-----|--------|
+| Elasticsearch | 2.55% | 1.4 GB |
+| Cassandra | 3.55% | 1.1 GB |
+| Logstash | 2.52% | 864 MB |
+| Airflow Webserver | 0.22% | 704 MB |
+| Kafka | 2.31% | 434 MB |
+
+**총 리소스:**
+- CPU: 약 30%
+- 메모리: 약 8 GB
+
+---
+
+### 5. Airflow DAG 실행 이력 확인
+
+#### **5.1. 웹 UI 접속**
+
+```
+http://localhost:8090
+```
+
+**계정:** admin / admin
+
+---
+
+#### **5.2. DAG 실행 결과 확인**
+
+Airflow UI에서 각 DAG의 실행 이력을 확인했습니다.
+
+| DAG | 실행 주기 | 총 실행 | 성공률 |
+|-----|-----------|---------|--------|
+| subway_data_pipeline | 10분 | 265회+ | 약 60% |
+| subway_daily_report | 일 1회 | - | 정상 |
+| subway_data_cleanup | 일 1회 | - | 정상 |
+| subway_monitoring | 5분 | - | 정상 |
+
+---
+
+### 6. 모니터링 시스템 확인
+
+#### **6.1. Prometheus 타겟 상태**
+
+```
+http://localhost:9090/targets
+```
+
+**확인 결과:**
+- 7개 마이크로서비스 타겟
+- 모두 UP 상태
+- 15초 주기 메트릭 수집
+
+---
+
+#### **6.2. Grafana 대시보드**
+
+```
+http://localhost:3001
+```
+
+**계정:** admin / admin
+
+**확인 항목:**
+- JVM 메모리 사용량
+- CPU 사용률
+- HTTP 요청 처리율
+- 실시간 그래프 시각화
+
+---
+
+#### **6.3. Kibana 로그 분석**
+
+```
+http://localhost:5601
+```
+
+**확인 결과:**
+- 11,475건 로그 수집
+- 30일 보관 정책
+- 서비스별 로그 필터링
+
+---
+
+### 테스트 요약
+
+| 테스트 항목 | 도구 | 결과 |
+|------------|------|------|
+| Kafka 처리량 | kafka-producer-perf-test | 1,755 records/sec |
+| API 응답시간 | curl --write-out | 0.19초 ~ 1.15초 |
+| Kubernetes 상태 | kubectl | 11일 안정 운영 |
+| 컨테이너 리소스 | docker stats | CPU 30%, 메모리 8GB |
+| Airflow 실행 | 웹 UI | 265회+ 실행 |
+| 모니터링 | Prometheus/Grafana/Kibana | 정상 동작 |
