@@ -8,6 +8,17 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 
 서울교통공사 공식 혼잡도 데이터(240개 역, 1,663건)를 기반으로 실시간 지하철 혼잡도 정보를 제공하는 프로덕션 레벨의 데이터 엔지니어링 플랫폼입니다. 단순한 토이 프로젝트가 아닌, 실무 환경을 완벽히 재현한 End-to-End 파이프라인을 구축했습니다.
 
+## 프로젝트 정보
+
+| 항목 | 내용 |
+|------|------|
+| **프로젝트명** | 실시간 지하철 혼잡도 분석 시스템 |
+| **프로젝트 유형** | 개인 프로젝트 |
+| **개발 기간** | 2025년 11월 09일 ~ 2025년 11월 27일 (19일) |
+| **개발 인원** | 1명 (Full-Stack + Data Engineering) |
+| **주요 기술** | Spring Boot, Kafka, Airflow, React |
+| **프로젝트 목표** | MSA 기반 실시간 데이터 파이프라인 구축 |
+
 ### 핵심 가치
 
 **실제 데이터 기반 설계**
@@ -16,7 +27,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 - 단순 랜덤 Mock이 아닌 현실적인 시뮬레이션
 
 **실무 중심 아키텍처**
-- 8개 마이크로서비스 MSA 구조
+- 7개 마이크로서비스 MSA 구조
 - Kafka Streams 실시간 스트림 처리
 - ELK + Prometheus/Grafana 통합 모니터링
 - Apache Airflow 기반 워크플로우 자동화
@@ -27,39 +38,49 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 - Python ETL + Java 서비스 하이브리드
 
 **검증된 성능**
-- Kafka 처리량: 1,000 msg/sec
-- API 응답시간: 150ms (Redis 캐싱)
-- ML 모델 정확도: R² 0.85+
+- Kafka 처리량: 1,755 records/sec (실측)
+- API 응답시간: 0.19초 ~ 1.15초 (실측)
+- Airflow DAG: 265회+ 실행 (실측)
 
 ---
 
 ## 시스템 아키텍처
 
-```
-서울교통공사 CSV (240개 역, 1,663건)
-    ↓
-Data Collector Service (Mock 생성)
-    ↓
-Apache Kafka (3개 Topic)
-    ↓
-Kafka Streams (실시간 처리)
-    ↓
-PostgreSQL + Cassandra + MongoDB
-    ↓
-Python ETL (Pandas/PySpark)
-    ↓
-Apache Airflow (워크플로우 자동화)
-    ↓
-Analytics/Prediction/Chatbot Services
-    ↓
-API Gateway (Eureka 디스커버리)
-    ↓
-React Frontend
-    ↓
-Prometheus/Grafana + ELK Stack
-    ↓
-Kubernetes (11 Pods)
-```
+![System Architecture](images/architecture.jpg)
+
+### 데이터 파이프라인 및 ML 흐름도 
+
+실시간 데이터 수집부터 ML 예측까지의 전체 파이프라인 구성
+
+![데이터 파이프라인 및 ML 흐름도](images/architecture-diagram.jpg)
+
+### 주요 구성 요소
+
+**프레젠테이션 계층**
+- React Frontend (사용자 인터페이스)
+- API Gateway (라우팅 & 로드밸런싱)
+
+**비즈니스 로직 계층**
+- 7개 마이크로서비스 (User, Data Collector, Data Processor, Analytics, Prediction, Chatbot, Notification)
+- Eureka (서비스 디스커버리)
+- JWT (인증)
+
+**데이터 계층**
+- Apache Kafka (메시징)
+- PostgreSQL (분석 결과)
+- MongoDB (채팅 이력)
+- Redis (캐싱)
+
+**처리 & 자동화**
+- Apache Airflow (워크플로우 자동화)
+
+**모니터링**
+- Prometheus, Grafana (메트릭)
+- ELK Stack (로그)
+
+**인프라**
+- Docker (컨테이너화)
+- Kubernetes (오케스트레이션)
 
 ---
 
@@ -81,7 +102,6 @@ Kubernetes (11 Pods)
 - **시계열 저장소**: congestion_timeseries
 - 30일 TTL 자동 삭제
 - 파티션 키: (station_name, line_number, date)
-- 쓰기 성능: 10,000 writes/sec
 
 #### MongoDB (채팅 이력)
 - **채팅 관리**: chat_conversations, chat_messages
@@ -160,16 +180,15 @@ React 18, Material-UI v5, Recharts, Axios
 - 240개 역 × 24시간 실제 혼잡도 패턴
 - 5:30 ~ 24:30 (30분 단위)
 
-**핵심 특징**
+**구현 특징**
 - 실제 출퇴근 패턴 반영
 - 역별 승객 가중치 적용
 - 시간대별 혼잡도 변화
 - 랜덤 변동 ±10%
 
-**성능**
+**데이터 생성**
 - 생성 주기: 1분
 - 생성 규모: 240개 역
-- 패턴 정확도: 95%+
 
 ### 2. Kafka Streams 실시간 처리
 
@@ -181,16 +200,17 @@ React 18, Material-UI v5, Recharts, Axios
 - 80% 이상 자동 알림 토픽 분기
 - 처리 결과 발행 (processed-congestion-data Topic)
 
-**성능 지표**
-- 처리량: 1,000 msg/sec
-- 처리 지연: 100ms 이내
-- 가용성: 99.9%
+**실측 성능**
+- 처리량: **1,755 records/sec**
+- 평균 지연: **1.47초**
+- Consumer Lag: 1,980 메시지
+- 총 처리량: 102,083 메시지
 
 ### 3. Cassandra 시계열 데이터베이스
 
-**선택 이유**
+**설계 목표**
 
-PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cassandra는 시계열 데이터에 최적화되어 있으며, 쓰기 성능이 뛰어남 (10,000 writes/sec).
+PostgreSQL 대비 시계열 데이터 쓰기 성능 향상을 위해 Cassandra를 도입했습니다.
 
 **최적화 전략**
 - 복합 파티션 키: 역 이름 + 호선 + 날짜
@@ -198,57 +218,44 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 - TTL 30일 자동 삭제
 - 날짜별 파티셔닝으로 부하 분산
 
-**성능 결과**
-- 쓰기: 10,000 writes/sec
-- 읽기: 150ms (실시간 조회)
-- 저장 용량: 자동 관리
+**실측 성능**
+- 읽기 응답시간: **0.19초** (호선별 실시간 조회)
+- 저장 레코드: 1개 (keyspace: subway_analytics)
+- Cassandra 버전: 4.1.10
 
 ### 4. ML 기반 혼잡도 예측
 
-**모델 아키텍처**
+**모델 설계**
 - 알고리즘: Spark MLlib Linear Regression
-- 학습 데이터: 10,000+ records
-- 피처: 시간대, 요일, 주말 여부, 출퇴근 시간 분류, 이동 평균
+- 피처: 시간대, 요일, 주말 여부, 출퇴근 시간 분류, 이동 평균 (9개)
+- 학습 데이터: 10,000+ records (목표)
 
-**모델 성능**
-- R² Score: 0.85+ (설명력 85% 이상)
-- RMSE: 5.2 (평균 오차 5.2%)
-- 학습 시간: 3분 (Spark 분산 처리)
-
-**자동 재학습**
+**자동 재학습 파이프라인**
 - 스케줄: 일 1회 (새벽 2시)
 - 오케스트레이션: Apache Airflow DAG
 - 조건: 새 데이터 1,000건 이상
 - 배포: 성능 향상 시 자동
 
-**API 성능**
-- 예측 API 응답시간: 50ms (Redis 캐싱)
+**API 구성**
+- 예측 엔드포인트: `/api/prediction/predict`
+- 역별 시간대 예측: `/api/prediction/station/{stationName}/hours`
+- 모델 메트릭: `/api/prediction/model/metrics`
 
-### 5. Python ETL 파이프라인
+### 5. Python ETL 파이프라인 (설계)
 
-**Pandas 처리 (중소 데이터)**
-- 처리 규모: 10,000건 / 0.67초
-- 주요 기능: 9개 피처 엔지니어링, Z-score 이상치 탐지 (117건), 역/시간대/호선별 집계
-- 출력: 4개 CSV 파일 (처리 데이터, 역별 통계, 시간대별 통계, 호선별 통계)
+**처리 아키텍처**
+- Pandas: 중소 데이터 처리 (10,000건 이하)
+- PySpark: 대용량 분산 처리 (100,000건 이상)
 
-**PySpark 처리 (대용량 분산 처리)**
-- 처리 규모: 100,000건 분산 처리
-- 주요 기능: Spark DataFrame API, Window 함수 기반 이동 통계, 분산 집계 및 정렬
-- 출력: Parquet 포맷 (날짜 파티셔닝)
+**주요 기능**
+- 피처 엔지니어링: 9개 피처 생성
+- 이상치 탐지: Z-score 기반
+- 집계: 역/시간대/호선별
+- 출력 포맷: CSV, Parquet (날짜 파티셔닝)
 
-**성능 비교**
-
-| 규모 | Pandas | PySpark |
-|------|--------|---------|
-| 10,000건 | 0.67초 | 2초 |
-| 100,000건 | 30초 | 5초 |
-| 1,000,000건 | 메모리 부족 | 30초 |
-
-**자동화 테스트**
-- 단위 테스트: 9개 테스트
-- Pandas: 전체 기능 검증 (데이터 생성 → 변환 → 집계 → 저장)
-- PySpark: 코드 구문 검증 (13개 메서드)
-- 테스트 통과율: 100%
+**처리 방식**
+- Pandas: DataFrame API, 통계 처리
+- PySpark: Spark DataFrame API, Window 함수, 분산 집계
 
 ### 6. Apache Airflow 워크플로우 자동화
 
@@ -263,19 +270,15 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 #### 1. subway_data_pipeline (10분마다)
 실시간 데이터 수집 및 처리 워크플로우
 - collect_data: 데이터 수집 API 트리거
-- check_quality: 데이터 품질 검증 (최근 10분간 데이터 5건 이상)
+- check_quality: 데이터 품질 검증 (최근 10분간 데이터 확인)
 - calculate_stats: 시간대별 통계 계산 및 저장
 - detect_anomalies: 이상치 탐지 (평균 대비 2배 이상 혼잡)
 
-성능 지표: 실행 주기 10분, 처리 데이터 2,466건/10분, 평균 실행 시간 15초
-
 #### 2. subway_daily_report (매일 23시)
 일일 통계 리포트 자동 생성
-- generate_daily_summary: 일일 요약 통계 (240개 역, 22,146건)
+- generate_daily_summary: 일일 요약 통계 생성
 - generate_top_congested: TOP 10 혼잡 역 분석
 - generate_hourly_pattern: 시간대별 혼잡도 패턴 분석
-
-산출물: 일일 통계, TOP 10 역, 시간대 패턴
 
 #### 3. subway_data_cleanup (매일 02시)
 데이터베이스 유지보수 자동화
@@ -283,27 +286,17 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 - vacuum_database: VACUUM ANALYZE로 디스크 공간 회수
 - archive_old_stats: 90일 이상 된 통계 아카이브
 
-성능 개선: 디스크 사용량 30% 감소, 쿼리 성능 20% 향상
-
 #### 4. subway_monitoring (5분마다)
 시스템 모니터링 자동화
 - check_data_freshness: 데이터 신선도 확인 (최근 15분 이내)
-- check_service_health: 마이크로서비스 헬스 체크 (3개 서비스)
+- check_service_health: 마이크로서비스 헬스 체크
 - check_database_size: DB 크기 모니터링
-
-모니터링 지표: 데이터 지연 감지, 서비스 다운타임 즉시 감지, DB 크기 19 MB
 
 **Airflow 시스템 구성**
 - Executor: LocalExecutor
 - Database: PostgreSQL (메타데이터)
 - DAG 스토리지: 로컬 파일 시스템
 - 스케줄러: Always-on
-
-**통합 효과**
-- 수동 작업 80% 감소
-- 데이터 품질 향상 (자동 검증)
-- 운영 효율성 3배 향상
-- 문제 조기 발견 (5분 주기 모니터링)
 
 **1. Airflow DAG 목록**
 
@@ -349,7 +342,7 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 - 대화 컨텍스트 유지 (5턴)
 
 **응답 시간**
-- 평균: 500ms
+- 평균: **0.78초** (실측)
 
 ### 8. 이메일 알림 서비스
 
@@ -368,7 +361,7 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 ### 9. 통합 모니터링 시스템
 
 **Grafana 대시보드**
-- 5개 대시보드 (서비스별, 인프라, Kafka, DB, 종합)
+- 2개 대시보드 (Spring Boot Monitoring, System Monitoring)
 - 실시간 메트릭 시각화
 - JVM 메모리, CPU 사용률, HTTP 요청 처리 모니터링
 
@@ -376,7 +369,7 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 
 **Prometheus 서비스 타겟**
 - 수집 주기: 15초
-- 8개 마이크로서비스 모니터링
+- 7개 마이크로서비스 모니터링
 - 타겟 상태: 모두 UP
 
 ![Prometheus Service Targets](images/prometheus-targets.png)
@@ -389,15 +382,45 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 ![Kibana Log Analysis](images/kibana-logs.png)
 
 **ELK Stack 구성**
-- Logstash: 8개 서비스 로그 수집
+- Logstash: 7개 서비스 로그 수집
 - Elasticsearch: 로그 저장 및 검색
 - Kibana: 실시간 로그 시각화
 
-**알림 규칙**
-- CPU 사용률 80% 이상
-- 메모리 사용률 85% 이상
-- API 응답시간 1초 이상
-- Kafka Consumer Lag 1000 이상
+---
+
+## 프론트엔드 화면
+
+### 1. 메인 대시보드
+
+실시간 혼잡도 현황 및 시간대별 통계 그래프
+
+![Main Dashboard](images/dashboard.png)
+
+### 2. 역 검색 및 실시간 조회
+
+호선 및 역 이름으로 실시간 혼잡도 조회
+
+![Station Search](images/station-search.png)
+
+### 3. AI 챗봇
+
+자연어 기반 지하철 혼잡도 상담
+
+![AI Chatbot](images/chatbot.png)
+
+### 4. 알림 설정
+
+사용자별 혼잡도 알림 설정 (역, 호선, 임계값)
+
+![Notification Settings - Empty](images/notification-settings-empty.png)
+
+![Notification Settings - Active](images/notification-settings.png)
+
+### 5. 알림 이력
+
+이메일 발송 이력 확인 (총 2건 발송 성공)
+
+![Notification History](images/notification-history.png)
 
 ---
 
@@ -407,6 +430,7 @@ PostgreSQL은 시계열 데이터 쓰기 성능이 낮음 (300 writes/sec). Cass
 subway-congestion-system/
 ├── eureka-server/                # 서비스 레지스트리 (8761)
 ├── api-gateway/                  # API 게이트웨이 (8080)
+├── user-service/                 # 회원 관리 (8087)
 ├── data-collector-service/       # 데이터 수집 (8081)
 ├── data-processor-service/       # Kafka Streams (8082)
 ├── analytics-service/            # 데이터 분석 (8083)
@@ -448,99 +472,124 @@ subway-congestion-system/
 
 ## 성과 지표
 
-### 데이터 처리 성능
+### 데이터 처리 성능 (실측)
+
+**Kafka 스트림 처리 (실제 측정)**
 
 | 지표 | 값 | 설명 |
 |------|-----|-----|
-| 데이터 소스 | 1,663건 | 서울교통공사 공식 데이터 |
-| Mock 생성 | 240개 역/분 | 실시간 데이터 생성 |
-| Kafka 처리량 | 1,000 msg/sec | 초당 메시지 처리 |
-| 처리 지연 | 100ms 이내 | End-to-End 지연 |
+| 처리량 | **1,755 records/sec** | Producer 성능 테스트 결과 |
+| 평균 처리 지연 | **1.47초** | End-to-End 평균 지연 시간 |
+| 최대 지연 | 2.65초 | 95th percentile: 2.53초 |
+| Consumer Lag | 1,980 메시지 | 실시간 처리 지연 |
+| 총 처리 메시지 | 102,083개 | 누적 처리량 |
 
-### 시스템 성능
+**측정 방법**
+- Kafka Producer Performance Test (10,000 records)
+- 레코드 크기: 1KB
+- Throughput: 무제한 (-1)
+- Bootstrap Server: localhost:9092
 
-| 지표 | 값 | 최적화 |
-|------|-----|--------|
-| API 응답시간 (실시간 혼잡도) | 150ms | Redis 캐싱 |
-| API 응답시간 (예측) | 50ms | Redis 캐싱 |
-| API 응답시간 (통계 조회) | 200ms | PostgreSQL 인덱스 |
-| API 응답시간 (챗봇) | 500ms | LLM 처리 |
-| Cassandra 쓰기 | 10,000 writes/sec | 파티셔닝 |
-| PostgreSQL 조회 | 200ms | 인덱스 |
-| Redis 캐싱 | 10ms | 캐시 히트 |
-| 동시 접속 | 100+ users | 부하 테스트 |
-| 가용성 | 99.9% | Kubernetes |
+**데이터 소스**
+- 서울교통공사 공식 데이터: 1,663건
+- Mock 생성 규모: **480개 메시지/분** (실측)
+- 시간 범위: 5:30 ~ 24:30 (30분 단위)
 
-### ML 모델 성능
+### 시스템 성능 (실측)
 
-| 지표 | 값 |
-|------|-----|
-| R² Score | 0.85+ |
-| RMSE | 5.2 |
-| MAE | 4.1 |
-| 학습 데이터 | 10,000+ records |
-| 피처 수 | 9개 |
-| 학습 시간 | 3분 |
-| 재학습 주기 | 일 1회 |
+**API 응답시간 (실제 측정)**
 
-### Python ETL 성능
+| API | 응답시간 | 설명 |
+|-----|----------|------|
+| 실시간 혼잡도 조회 | 1.15초 | Analytics Service - 강남역 실시간 데이터 |
+| TOP 혼잡역 조회 | 0.45초 | Analytics Service - TOP 10 혼잡 역 조회 |
+| Cassandra 실시간 조회 | 0.19초 | Analytics Service - 호선별 시계열 데이터 |
+| AI 챗봇 응답 | 0.78초 | Chatbot Service - 자연어 처리 + 실시간 데이터 |
+| Redis Health Check | 0.04초 | Cache Service - 캐시 서버 상태 확인 |
 
-**Pandas 처리**
+**측정 환경**
+- 로컬 개발 환경 (Windows)
+- 7개 마이크로서비스 동시 실행
+- PostgreSQL, MongoDB, Cassandra, Redis 동시 가동
+- 측정 도구: curl (응답시간 기준)
 
-| 규모 | 처리 시간 | 성능 |
-|------|-----------|------|
-| 1,000건 | 0.07초 | 14,285 records/sec |
-| 10,000건 | 0.67초 | 14,925 records/sec |
-| 100,000건 | 30초 | 3,333 records/sec |
+**성능 분석**
+- **실시간 혼잡도**: PostgreSQL 조회 + Redis 캐싱 + 데이터 가공
+- **TOP 혼잡역**: PostgreSQL 집계 쿼리 (ORDER BY + LIMIT)
+- **Cassandra 조회**: 시계열 데이터 파티션 스캔 (날짜 기반)
+- **챗봇 응답**: LLM 추론 + Analytics API 호출 + MongoDB 저장
+- **캐시 체크**: Redis PING 커맨드 (메모리 기반)
 
-**PySpark 분산 처리**
+### Airflow 워크플로우 성능 (실측)
 
-| 규모 | 처리 시간 | 성능 |
-|------|-----------|------|
-| 10,000건 | 2초 | 5,000 records/sec |
-| 100,000건 | 5초 | 20,000 records/sec |
-| 1,000,000건 | 30초 | 33,333 records/sec |
+**DAG 실행 시간 (Airflow UI 기준)**
 
-### Airflow 워크플로우 성능
+| DAG | 실행 주기 | 최대 실행 시간 | Task 수 | 상태 |
+|-----|-----------|----------------|---------|------|
+| subway_data_pipeline | 10분 | 5분 13초 | 4개 | 일부 실패 |
+| subway_daily_report | 일 1회 (23시) | 2분 55초 | 3개 | 정상 동작 |
+| subway_data_cleanup | 일 1회 (02시) | 5분 52초 | 3개 | 정상 동작 |
+| subway_monitoring | 5분 | 5분 09초 | 3개 | 정상 동작 |
 
-| DAG | 실행 주기 | 평균 실행 시간 | Task 수 |
-|-----|-----------|----------------|---------|
-| subway_data_pipeline | 10분 | 15초 | 4개 |
-| subway_daily_report | 일 1회 (23시) | 30초 | 3개 |
-| subway_data_cleanup | 일 1회 (02시) | 45초 | 3개 |
-| subway_monitoring | 5분 | 10초 | 3개 |
-
-**Airflow 시스템 지표**
+**Airflow 시스템 지표 (실측)**
 
 | 항목 | 값 |
 |------|-----|
 | 총 DAG 수 | 4개 |
 | 총 Task 수 | 13개 |
-| DAG 실행 성공률 | 100% |
-| 평균 스케줄링 지연 | 1초 이내 |
-| 일일 Task 실행 횟수 | 300+ |
+| 총 실행 횟수 | 265회+ |
+| DAG 실행 성공률 | 약 60% (일부 API 연결 이슈) |
+| Executor | LocalExecutor |
+| Database | PostgreSQL (메타데이터) |
 
-### 모니터링
+**리소스 사용량**
+- Airflow Scheduler: CPU 5.46%, 메모리 471 MB
+- Airflow Webserver: CPU 0.22%, 메모리 704 MB
+
+### 모니터링 (실측)
 
 | 항목 | 값 |
 |------|-----|
 | 메트릭 수집 주기 | 15초 |
 | 로그 수집 | 실시간 (Logstash) |
 | 로그 보관 | 30일 |
-| 메트릭 종류 | 200+ |
-| 대시보드 | 5개 |
-| 알림 규칙 | 10개 |
+| 메트릭 종류 | 450+ (Prometheus) |
+| 대시보드 | 2개 (Grafana) |
+| DB 크기 | 7.5 MB (PostgreSQL subway_analytics) |
 
-### Kubernetes 배포
+### 컨테이너 배포 (실측)
+
+**Docker Compose 구성**
 
 | 항목 | 값 |
 |------|-----|
-| 총 Pod 수 | 11개 |
-| 마이크로서비스 | 8개 |
-| 인프라 Pod | 3개 |
-| 고가용성 (Replica 2) | Analytics, API Gateway, Chatbot |
-| CPU | 4 Core |
-| Memory | 8 GB |
+| 총 컨테이너 수 | 15개 |
+| Airflow | 2개 (Scheduler, Webserver) |
+| 데이터베이스 | 4개 (PostgreSQL×2, MongoDB, Cassandra) |
+| 메시징/캐시 | 3개 (Kafka, Zookeeper, Redis) |
+| 모니터링 | 5개 (Prometheus, Grafana, Elasticsearch, Logstash, Kibana) |
+| Kubernetes | 1개 (Minikube) |
 
----
+**리소스 사용량 (실측)**
 
+| 컨테이너 | CPU | 메모리 | 설명 |
+|----------|-----|--------|------|
+| Elasticsearch | 2.55% | 1.4 GB | 로그 저장/검색 |
+| Cassandra | 3.55% | 1.1 GB | 시계열 데이터 |
+| Logstash | 2.52% | 864 MB | 로그 수집 |
+| Airflow Webserver | 0.22% | 704 MB | 워크플로우 UI |
+| Kibana | 3.56% | 641 MB | 로그 시각화 |
+| Airflow Scheduler | 5.46% | 471 MB | DAG 스케줄링 |
+| Kafka | 2.31% | 434 MB | 메시지 큐 |
+| MongoDB | 0.71% | 180 MB | 채팅 이력 |
+| Zookeeper | 0.18% | 147 MB | Kafka 코디네이션 |
+| Minikube | 0.09% | 131 MB | Kubernetes |
+| Grafana | 0.60% | 90 MB | 메트릭 시각화 |
+| PostgreSQL (Airflow) | 1.76% | 67 MB | Airflow 메타데이터 |
+| PostgreSQL (Main) | 0.00% | 39 MB | 애플리케이션 DB |
+| Prometheus | 0.03% | 31 MB | 메트릭 수집 |
+| Redis | 0.20% | 4.5 MB | 캐싱 |
+
+**총 리소스**
+- CPU: 약 30%
+- 메모리: 약 8 GB
