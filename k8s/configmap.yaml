@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: subway-config
+  namespace: subway-system
+data:
+  EUREKA_URL: "http://eureka-server:8761/eureka/"

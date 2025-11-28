@@ -32,5 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-
+airflow/logs/
+logs/
+*.log
 **/congestion_data.csv

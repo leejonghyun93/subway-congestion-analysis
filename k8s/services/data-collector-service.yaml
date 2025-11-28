@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collector-service
+  namespace: subway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collector-service
+  template:
+    metadata:
+      labels:
+        app: data-collector-service
+    spec:
+      containers:
+        - name: data-collector-service
+          image: subway/data-collector-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://eureka-server:8761/eureka/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-collector-service
+  namespace: subway-system
+spec:
+  selector:
+    app: data-collector-service
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP
