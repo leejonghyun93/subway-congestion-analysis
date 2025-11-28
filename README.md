@@ -744,9 +744,11 @@ kubectl get namespaces
 ```
 NAME                   STATUS   AGE
 default                Active   11d
+kube-node-lease        Active   11d
+kube-public            Active   11d
 kube-system            Active   11d
+kubernetes-dashboard   Active   6d17h
 subway-system          Active   11d
-kubernetes-dashboard   Active   5d22h
 ```
 
 ---
@@ -760,14 +762,16 @@ kubectl get services -n subway-system
 **결과:**
 ```
 NAME                   TYPE        CLUSTER-IP       PORT(S)            AGE
-analytics-service      ClusterIP   *************    8083/TCP           10d
-api-gateway            NodePort    *************    8080:30108/TCP     5d21h
-chatbot-service        ClusterIP   *************    8085/TCP           6d19h
-eureka-server          NodePort    *************   8761:31796/TCP     5d21h
-mongodb                ClusterIP   *************    27017/TCP          6d19h
-notification-service   ClusterIP   *************     8086/TCP           5d20h
+analytics-service      ClusterIP   *************    8083/TCP           6d16h
+api-gateway            NodePort    *************    8080:30108/TCP     6d16h
+chatbot-service        ClusterIP   *************    8085/TCP           7d14h
+eureka-server          NodePort    *************   8761:31796/TCP     6d16h
+mongodb                ClusterIP   *************    27017/TCP          7d15h
+notification-service   ClusterIP   *************    8086/TCP           6d16h
 postgresql             ClusterIP   *************    5432/TCP           11d
 redis                  ClusterIP   *************    6379/TCP           11d
+user-service           ClusterIP   *************    8088/TCP           23m
+
 ```
 
 **확인 사항:**
@@ -785,25 +789,27 @@ kubectl get pods -n subway-system
 
 **결과:**
 ```
-NAME                                    READY   STATUS    RESTARTS       AGE
-analytics-service-867455bcbf-9qjp5      1/1     Running   4 (5d4h ago)   5d20h
-analytics-service-867455bcbf-xdcvh      1/1     Running   4 (5d4h ago)   5d20h
-api-gateway-85948cb84-j962h             1/1     Running   1 (5d4h ago)   5d20h
-api-gateway-85948cb84-qjgf8             1/1     Running   1 (5d4h ago)   5d20h
-chatbot-service-59898589d6-dbpx9        1/1     Running   2 (5d4h ago)   6d19h
-chatbot-service-59898589d6-mkd4s        1/1     Running   2 (5d4h ago)   6d19h
-eureka-server-ccd58d849-fltcd           1/1     Running   1 (5d4h ago)   5d20h
-mongodb-55778c458b-rxtn6                1/1     Running   2 (5d4h ago)   6d19h
-notification-service-6d8858f7b4-qfhp2   1/1     Running   6 (5d4h ago)   5d20h
-postgresql-d557cb5dc-b2ltq              1/1     Running   6 (5d4h ago)   11d
-redis-67975c49c9-mm592                  1/1     Running   6 (5d4h ago)   11d
+NAME                                    READY   STATUS    RESTARTS         AGE
+analytics-service-867455bcbf-9qjp5      1/1     Running   13               6d16h
+analytics-service-867455bcbf-xdcvh      1/1     Running   13               6d16h
+api-gateway-85948cb84-j962h             1/1     Running   2                6d16h
+api-gateway-85948cb84-qjgf8             1/1     Running   2                6d16h
+chatbot-service-59898589d6-dbpx9        1/1     Running   3                7d14h
+chatbot-service-59898589d6-mkd4s        1/1     Running   3                7d14h
+eureka-server-ccd58d849-fltcd           1/1     Running   2                6d16h
+mongodb-55778c458b-rxtn6                1/1     Running   3                7d15h
+notification-service-6d8858f7b4-qfhp2   1/1     Running   18               6d16h
+postgresql-d557cb5dc-b2ltq              1/1     Running   7                11d
+redis-67975c49c9-mm592                  1/1     Running   7                11d
+user-service-6bcb8c8f5-djnsc            1/1     Running   0                46s
+user-service-6bcb8c8f5-p5qck            1/1     Running   0                86s
+
 ```
 
 **확인 사항:**
-- 총 11개 Pod 실행 중
-- 고가용성 구성: analytics (2), api-gateway (2), chatbot (2)
+- 총 12개 Pod 실행 중
+- 고가용성 구성: analytics (2), api-gateway (2), chatbot (2), user-service(2)
 - 모든 Pod 상태: Running
-- 최장 운영: 11일 (postgresql, redis)
 
 ---
 
@@ -816,20 +822,22 @@ kubectl get deployments -n subway-system
 **결과:**
 ```
 NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
-analytics-service      2/2     2            2           5d20h
-api-gateway            2/2     2            2           5d20h
-chatbot-service        2/2     2            2           6d19h
-eureka-server          1/1     1            1           5d20h
-mongodb                1/1     1            1           6d19h
-notification-service   1/1     1            1           5d20h
+analytics-service      2/2     2            2           6d16h
+api-gateway            2/2     2            2           6d16h
+chatbot-service        2/2     2            2           7d14h
+eureka-server          1/1     1            1           6d16h
+mongodb                1/1     1            1           7d15h
+notification-service   1/1     1            1           6d16h
 postgresql             1/1     1            1           11d
 redis                  1/1     1            1           11d
+user-service           2/2     2            2           23m
+
 ```
 
 **확인 사항:**
-- 총 8개 Deployment
-- Replica 2개: analytics, api-gateway, chatbot
-- 모두 정상 배포 (READY = AVAILABLE)
+- 총 9개 Deployment
+- Replica 2개: analytics, api-gateway, chatbot, user-service
+- 모두 정상 배포 
 
 ---
 
