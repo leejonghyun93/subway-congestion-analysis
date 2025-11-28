@@ -946,3 +946,21 @@ http://localhost:5601
 | 컨테이너 리소스 | docker stats | CPU 30%, 메모리 8GB |
 | Airflow 실행 | 웹 UI | 265회+ 실행 |
 | 모니터링 | Prometheus/Grafana/Kibana | 정상 동작 |
+
+### velog 문법 정리 
+```
+velog.io/@username/
+├── spring-boot-msa-cheatsheet
+├── kafka-airflow-spark-cheatsheet  
+├── database-cheatsheet
+├── docker-kubernetes-cheatsheet
+└── react-frontend-cheatsheet
+
+**시리즈로 묶기:**
+- 벨로그 시리즈 기능 활용
+- 시리즈명: "실전 기술 스택 치트시트"
+1. https://velog.io/@fhohffodf/Spring-Boot-MSA-%EC%B9%98%ED%8A%B8%EC%8B%9C%ED%8A%B8
+2. https://velog.io/@fhohffodf/%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D-%EA%B0%84%EB%8B%A8-%EC%A0%95%EB%A6%AC-Kafka-Airflow-Spark-Python
+3. https://velog.io/@fhohffodf/%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D-%EA%B0%84%EB%8B%A8-%EC%A0%95%EB%A6%AC-3%EC%B0%A8-%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B2%A0%EC%9D%B4%EC%8A%A4
+4. https://velog.io/@fhohffodf/%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D-%EA%B0%84%EB%8B%A8-%EC%A0%95%EB%A6%AC-4%EC%B0%A8-Docker-Kubernetes
+5. https://velog.io/@fhohffodf/%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D-%EA%B0%84%EB%8B%A8-%EC%A0%95%EB%A6%AC-%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C
