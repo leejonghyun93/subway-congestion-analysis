@@ -239,7 +239,33 @@ PostgreSQL 대비 시계열 데이터 쓰기 성능 향상을 위해 Cassandra�
 - 저장 레코드: 1개 (keyspace: subway_analytics)
 - Cassandra 버전: 4.1.10
 
-### 4. ML 기반 혼잡도 예측
+### 4. PostgreSQL 프로시저 및 함수
+
+**시간대별 통계 함수**
+- `calculate_hourly_stats()`: 시간대별 혼잡도 집계
+- 복잡한 쿼리를 함수화하여 재사용성 향상
+
+**TOP 혼잡역 조회 함수**
+- `get_top_congested_stations()`: 실시간 TOP 10 혼잡역
+- 동적 LIMIT 파라미터 지원
+
+**일일 통계 자동 계산 프로시저**
+- `update_daily_statistics()`: 일일 통계 배치 처리
+- Airflow DAG에서 자동 호출하여 통계 테이블 갱신
+
+**사용 예시**
+```sql
+-- 시간대별 통계 조회
+SELECT * FROM calculate_hourly_stats('2025-11-28');
+
+-- TOP 혼잡역 조회
+SELECT * FROM get_top_congested_stations(10);
+
+-- 일일 통계 업데이트
+CALL update_daily_statistics('2025-11-28');
+```
+
+### 5. ML 기반 혼잡도 예측
 
 **모델 설계**
 - 알고리즘: Spark MLlib Linear Regression
@@ -257,7 +283,7 @@ PostgreSQL 대비 시계열 데이터 쓰기 성능 향상을 위해 Cassandra�
 - 역별 시간대 예측: `/api/prediction/station/{stationName}/hours`
 - 모델 메트릭: `/api/prediction/model/metrics`
 
-### 5. Python ETL 파이프라인 (설계)
+### 6. Python ETL 파이프라인 (설계)
 
 **처리 아키텍처**
 - Pandas: 중소 데이터 처리 (10,000건 이하)
@@ -273,7 +299,7 @@ PostgreSQL 대비 시계열 데이터 쓰기 성능 향상을 위해 Cassandra�
 - Pandas: DataFrame API, 통계 처리
 - PySpark: Spark DataFrame API, Window 함수, 분산 집계
 
-### 6. Apache Airflow 워크플로우 자동화
+### 7. Apache Airflow 워크플로우 자동화
 
 **구축 목적**
 - 데이터 파이프라인 자동화 및 스케줄링
