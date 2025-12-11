@@ -7,15 +7,15 @@ CREATE OR REPLACE FUNCTION calculate_hourly_stats(
     max_congestion NUMERIC
 ) AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        EXTRACT(HOUR FROM timestamp)::INT as hour,
+RETURN QUERY
+SELECT
+    EXTRACT(HOUR FROM timestamp)::INT as hour,
         AVG(congestion_level)::NUMERIC(5,2),
         MAX(congestion_level)::NUMERIC(5,2)
-    FROM congestion_data
-    WHERE DATE(timestamp) = p_date
-    GROUP BY EXTRACT(HOUR FROM timestamp)
-    ORDER BY hour;
+FROM congestion_data
+WHERE DATE(timestamp) = p_date
+GROUP BY EXTRACT(HOUR FROM timestamp)
+ORDER BY hour;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -24,19 +24,19 @@ CREATE OR REPLACE FUNCTION get_top_congested_stations(
     p_limit INT DEFAULT 10
 ) RETURNS TABLE(
     station_name VARCHAR,
-    line_number INT,
+    line_number VARCHAR,
     avg_congestion NUMERIC
 ) AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        cd.station_name,
-        cd.line_number,
-        AVG(cd.congestion_level)::NUMERIC(5,2)
-    FROM congestion_data cd
-    WHERE cd.timestamp >= NOW() - INTERVAL '1 hour'
-    GROUP BY cd.station_name, cd.line_number
-    ORDER BY AVG(cd.congestion_level) DESC
+RETURN QUERY
+SELECT
+    cd.station_name::VARCHAR,
+    cd.line_number::VARCHAR,
+    AVG(cd.congestion_level)::NUMERIC(5,2)
+FROM congestion_data cd
+WHERE cd.timestamp >= NOW() - INTERVAL '1 hour'
+GROUP BY cd.station_name, cd.line_number
+ORDER BY AVG(cd.congestion_level) DESC
     LIMIT p_limit;
 END;
 $$ LANGUAGE plpgsql;
@@ -47,18 +47,18 @@ CREATE OR REPLACE PROCEDURE update_daily_statistics(
 ) AS $$
 BEGIN
     INSERT INTO daily_statistics (
-        date, total_records, avg_congestion, max_congestion
+        statistics_date, total_records, avg_congestion, max_congestion, 
+        station_name, line_number, created_at
     )
-    SELECT 
+    SELECT
         p_date,
         COUNT(*),
         AVG(congestion_level),
-        MAX(congestion_level)
+        MAX(congestion_level),
+        'total',
+        'total',
+        NOW()
     FROM congestion_data
-    WHERE DATE(timestamp) = p_date
-    ON CONFLICT (date) DO UPDATE
-    SET total_records = EXCLUDED.total_records,
-        avg_congestion = EXCLUDED.avg_congestion,
-        max_congestion = EXCLUDED.max_congestion;
+    WHERE DATE(timestamp) = p_date;
 END;
 $$ LANGUAGE plpgsql;
