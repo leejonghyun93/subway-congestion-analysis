@@ -251,7 +251,7 @@ PostgreSQL 대비 시계열 데이터 쓰기 성능 향상을 위해 Cassandra�
 
 **일일 통계 자동 계산 프로시저**
 - `update_daily_statistics()`: 일일 통계 배치 처리
-- Airflow DAG에서 자동 호출하여 통계 테이블 갱신
+- 날짜별 통계 데이터를 자동으로 집계하여 테이블에 저장
 
 **사용 예시**
 ```sql
