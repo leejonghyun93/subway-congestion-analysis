@@ -60,7 +60,7 @@ class SparkETLPipeline:
             else:
                 congestion = random.uniform(30, 55)
             if station in ['Gangnam', 'Hongdae', 'Jamsil']:
-                congestion = min(100, congestion * 1.15)
+                congestion = min(100.0, congestion * 1.15)
             timestamp = base_time - timedelta(days=random.randint(0, 30), hours=hour, minutes=random.randint(0, 60))
             data.append((i + 1, station, line, round(congestion, 2), int(congestion * random.uniform(2.5, 3.5)), timestamp))
         schema = StructType([

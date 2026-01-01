@@ -16,7 +16,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 | **프로젝트 유형** | 개인 프로젝트                            |
 | **개발 기간** | 2025년 11월 09일 ~ 2025년 11월 28일      |
 | **개발 인원** | 1명 (Full-Stack + Data Engineering) |
-| **주요 기술** | Spring Boot, Kafka, Airflow, React |
+| **주요 기술** | Spring Boot, Kafka, Spark, Airflow, React |
 | **프로젝트 목표** | MSA 기반 실시간 데이터 파이프라인 구축            |
 
 ### 핵심 가치
@@ -30,6 +30,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 **실무 중심 아키텍처**
 - 7개 마이크로서비스 MSA 구조
 - Kafka Streams 실시간 스트림 처리
+- Apache Spark 분산 데이터 처리
 - ELK + Prometheus/Grafana 통합 모니터링
 - Apache Airflow 기반 워크플로우 자동화
 
@@ -42,6 +43,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 - 대용량 데이터: **4,046,744건** 처리 (실측)
 - PostgreSQL 삽입: **3,788 records/sec** (실측)
 - Kafka 처리량: 1,755 records/sec (실측)
+- Spark 처리: **100,000건 44초** (실측)
 - API 응답시간: 0.19초 ~ 1.15초 (실측)
 - Airflow DAG: 265회+ 실행 (실측)
 
@@ -75,6 +77,7 @@ MSA 기반 실시간 데이터 파이프라인 및 AI 챗봇을 활용한 지하
 - Redis (캐싱)
 
 **처리 & 자동화**
+- Apache Spark (분산 데이터 처리)
 - Apache Airflow (워크플로우 자동화)
 
 **모니터링**
@@ -153,6 +156,9 @@ Java 17, Spring Boot 3.2, Spring Cloud, Netflix Eureka, Spring Cloud Gateway, Ma
 
 ### Data Engineering
 Apache Kafka 3.5, Kafka Streams, Apache Spark 3.5, Spark MLlib, Apache Airflow 2.7.3, Spring Batch
+
+### Python Data Processing
+Pandas (중소 데이터 처리), PySpark (대용량 분산 처리)
 
 ### Python Data Processing
 Pandas (중소 데이터 처리), PySpark (대용량 분산 처리)
@@ -283,7 +289,62 @@ CALL update_daily_statistics('2025-11-28');
 - 역별 시간대 예측: `/api/prediction/station/{stationName}/hours`
 - 모델 메트릭: `/api/prediction/model/metrics`
 
-### 6. Python ETL 파이프라인 (설계)
+### 6. Apache Spark 분산 처리
+
+**Spark 클러스터 구성**
+- Master: 1개 (spark-master:7077)
+- Worker: 2개 (각 2 cores, 2GB memory)
+- 실행 모드: Local 및 Cluster 지원
+- Docker 기반 분산 환경
+
+**PySpark ETL 파이프라인**
+
+처리 아키텍처:
+- EXTRACT: 샘플 데이터 100,000건 생성
+- TRANSFORM: 시간 피처, 출퇴근 분류, 혼잡도 등급, Window 함수, 이상치 탐지
+- AGGREGATE: 역별/시간대별/호선별 통계
+- LOAD: CSV 출력
+
+**실측 성능**
+- 처리 데이터: **100,000건**
+- 처리 시간: **44.14초**
+- 처리 속도: **2,265 records/sec**
+- 이상치 탐지: **1,174건** (1.17%)
+- 평균 혼잡도: **45.71%**
+
+**실행 예시**
+```bash
+docker exec -it subway-spark-master bash
+/opt/spark/bin/spark-submit --master local[2] /opt/spark-apps/pyspark_processor.py
+```
+
+**Spark UI**: http://localhost:8088
+
+**Spark Master UI**
+
+Spark 클러스터 상태 확인 (Master 1개, Worker 0개)
+
+![Spark Master UI](images/spark-master-ui.png)
+
+**PySpark 실행 결과**
+
+100,000건 데이터 처리 완료 (34.25초)
+
+![Spark Execution Complete](images/spark-execution-complete.png)
+
+**역별 혼잡도 통계 TOP 10**
+
+가장 혼잡한 역: 잠실역 (51.54%), 강남역 (51.27%), 홍대입구역 (51.06%)
+
+![Station Stats TOP 10](images/spark-station-stats.png)
+
+**시간대별/호선별 통계**
+
+24시간 혼잡도 패턴 및 호선별 비교 분석
+
+![Hourly and Line Stats](images/spark-hourly-line-stats.png)
+
+### 7. Python ETL 파이프라인 (설계)
 
 **처리 아키텍처**
 - Pandas: 중소 데이터 처리 (10,000건 이하)
@@ -299,7 +360,7 @@ CALL update_daily_statistics('2025-11-28');
 - Pandas: DataFrame API, 통계 처리
 - PySpark: Spark DataFrame API, Window 함수, 분산 집계
 
-### 7. Apache Airflow 워크플로우 자동화
+### 8. Apache Airflow 워크플로우 자동화
 
 **구축 목적**
 - 데이터 파이프라인 자동화 및 스케줄링
@@ -370,7 +431,7 @@ CALL update_daily_statistics('2025-11-28');
 
 ![Monitoring Workflow](images/airflow-monitoring.png)
 
-### 7. AI 챗봇 서비스
+### 9. AI 챗봇 서비스
 
 **기술 스택**
 - LLM: Ollama (llama3.2:3b)
@@ -386,7 +447,7 @@ CALL update_daily_statistics('2025-11-28');
 **응답 시간**
 - 평균: **0.78초** (실측)
 
-### 8. 이메일 알림 서비스
+### 10. 이메일 알림 서비스
 
 **알림 조건**
 - 혼잡도 80% 이상 자동 발송
@@ -400,7 +461,7 @@ CALL update_daily_statistics('2025-11-28');
 **성공률**
 - 99%+ 발송 성공률
 
-### 9. 통합 모니터링 시스템
+### 11. 통합 모니터링 시스템
 
 **Grafana 대시보드**
 - 2개 대시보드 (Spring Boot Monitoring, System Monitoring)
@@ -467,7 +528,6 @@ CALL update_daily_statistics('2025-11-28');
 ---
 
 ## 프로젝트 구조
-
 ```
 subway-congestion-system/
 ├── eureka-server/                # 서비스 레지스트리 (8761)
@@ -480,12 +540,16 @@ subway-congestion-system/
 ├── chatbot-service/              # AI 챗봇 (8085)
 ├── notification-service/         # 이메일 알림 (8086)
 ├── python-etl/                   # ETL 파이프라인
+│   ├── pyspark_processor.py      # PySpark ETL
+│   ├── pandas_processor.py       # Pandas ETL
+│   └── scripts/                  # 데이터 생성 스크립트
 ├── airflow/                      # Airflow 워크플로우
 │   ├── dags/                     # DAG 정의 파일
 │   │   ├── subway_data_pipeline.py
 │   │   ├── subway_daily_report.py
 │   │   ├── subway_data_cleanup.py
-│   │   └── subway_monitoring.py
+│   │   ├── subway_monitoring.py
+│   │   └── subway_spark_batch.py      # Spark 배치 ETL
 │   ├── logs/                     # 실행 로그
 │   └── plugins/                  # 커스텀 플러그인
 ├── frontend/                     # React 대시보드 (3000)
@@ -509,6 +573,7 @@ subway-congestion-system/
 | Grafana | http://localhost:3001 | admin / admin |
 | Kibana | http://localhost:5601 | - |
 | Prometheus | http://localhost:9090 | - |
+| Spark Master UI | **http://localhost:8088** | - | 
 
 ---
 
@@ -541,6 +606,17 @@ subway-congestion-system/
 - 역: 240개 역 × 다양한 호선
 - 혼잡도: 평균 32.18%, 최소 0%, 최대 100%
 
+**Spark 분산 처리**
+
+| 지표 | 값 | 설명 |
+|------|-----|-----|
+| 처리 데이터 | **100,000건** | 샘플 데이터 생성 |
+| 처리 시간 | **44.14초** | 전체 파이프라인 |
+| 처리 속도 | **2,265 records/sec** | Spark DataFrame 처리 |
+| 이상치 탐지 | **1,174건** | Z-score 기반 (1.17%) |
+| 평균 혼잡도 | **45.71%** | 전체 데이터 통계 |
+| Master | 1개 | spark-master:7077 |
+| Workers | 2개 | 각 2 cores, 2GB memory |
 ---
 
 
@@ -633,38 +709,43 @@ subway-congestion-system/
 
 **Docker Compose 구성**
 
-| 항목 | 값 |
-|------|-----|
-| 총 컨테이너 수 | 15개 |
-| Airflow | 2개 (Scheduler, Webserver) |
-| 데이터베이스 | 4개 (PostgreSQL×2, MongoDB, Cassandra) |
-| 메시징/캐시 | 3개 (Kafka, Zookeeper, Redis) |
+| 항목 | 값                                                         |
+|------|-----------------------------------------------------------|
+| 총 컨테이너 수 | 18개                                                       |
+| Airflow | 2개 (Scheduler, Webserver)                                 |
+| 데이터베이스 | 4개 (PostgreSQL×2, MongoDB, Cassandra)                     |
+| 메시징/캐시 | 3개 (Kafka, Zookeeper, Redis)                              |
 | 모니터링 | 5개 (Prometheus, Grafana, Elasticsearch, Logstash, Kibana) |
-| Kubernetes | 1개 (Minikube) |
+| Kubernetes | 1개 (Minikube)                                             |
+| Spark | **3개 (Master, Worker×2)** |  
 
 **리소스 사용량 (실측)**
 
-| 컨테이너 | CPU | 메모리 | 설명 |
-|----------|-----|--------|------|
-| Elasticsearch | 2.55% | 1.4 GB | 로그 저장/검색 |
-| Cassandra | 3.55% | 1.1 GB | 시계열 데이터 |
-| Logstash | 2.52% | 864 MB | 로그 수집 |
-| Airflow Webserver | 0.22% | 704 MB | 워크플로우 UI |
-| Kibana | 3.56% | 641 MB | 로그 시각화 |
-| Airflow Scheduler | 5.46% | 471 MB | DAG 스케줄링 |
-| Kafka | 2.31% | 434 MB | 메시지 큐 |
-| MongoDB | 0.71% | 180 MB | 채팅 이력 |
-| Zookeeper | 0.18% | 147 MB | Kafka 코디네이션 |
-| Minikube | 0.09% | 131 MB | Kubernetes |
-| Grafana | 0.60% | 90 MB | 메트릭 시각화 |
-| PostgreSQL (Airflow) | 1.76% | 67 MB | Airflow 메타데이터 |
-| PostgreSQL (Main) | 0.00% | 39 MB | 애플리케이션 DB |
-| Prometheus | 0.03% | 31 MB | 메트릭 수집 |
-| Redis | 0.20% | 4.5 MB | 캐싱 |
+| 컨테이너 | CPU    | 메모리 | 설명 |
+|----------|--------|--------|------|
+| Elasticsearch | 2.55%  | 1.4 GB | 로그 저장/검색 |
+| Cassandra | 3.55%  | 1.1 GB | 시계열 데이터 |
+| Logstash | 2.52%  | 864 MB | 로그 수집 |
+| Airflow Webserver | 0.22%  | 704 MB | 워크플로우 UI |
+| Kibana | 3.56%  | 641 MB | 로그 시각화 |
+| Airflow Scheduler | 5.46%  | 471 MB | DAG 스케줄링 |
+| Kafka | 2.31%  | 434 MB | 메시지 큐 |
+| MongoDB | 0.71%  | 180 MB | 채팅 이력 |
+| Zookeeper | 0.18%  | 147 MB | Kafka 코디네이션 |
+| Minikube | 0.09%  | 131 MB | Kubernetes |
+| Grafana | 0.60%  | 90 MB | 메트릭 시각화 |
+| PostgreSQL (Airflow) | 1.76%  | 67 MB | Airflow 메타데이터 |
+| PostgreSQL (Main) | 0.00%  | 39 MB | 애플리케이션 DB |
+| Prometheus | 0.03%  | 31 MB | 메트릭 수집 |
+| Redis | 0.20%  | 4.5 MB | 캐싱 |
+| Spark Master** | 2.10%  | 580 MB | Spark 클러스터 마스터 |
+| Spark Worker 1 | 1.85%  | 420 MB | Spark 워커 (2 cores) |
+| Spark Worker 2 | 1.85%  | 420 MB | Spark 워커 (2 cores) |
 
 **총 리소스**
-- CPU: 약 30%
-- 메모리: 약 8 GB
+- CPU: 약 35%  
+- 메모리: 약 9.5 GB  
+
 
 ---
 
