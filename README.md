@@ -297,6 +297,10 @@ CALL update_daily_statistics('2025-11-28');
 - 실행 모드: Local 및 Cluster 지원
 - Docker 기반 분산 환경
 
+---
+
+#### 6.1 샘플 데이터 처리 (10만건)
+
 **PySpark ETL 파이프라인**
 
 처리 아키텍처:
@@ -343,6 +347,45 @@ Spark 클러스터 상태 확인 (Master 1개, Worker 0개)
 24시간 혼잡도 패턴 및 호선별 비교 분석
 
 ![Hourly and Line Stats](images/spark-hourly-line-stats.png)
+
+---
+
+#### 6.2 대용량 배치 처리 (795만건)
+
+**PostgreSQL → Parquet → Spark 파이프라인**
+
+처리 아키텍처:
+- EXTRACT: PostgreSQL 7,950,704건 → Parquet 변환
+- TRANSFORM: Window 함수 기반 이동평균, Z-score 이상치 탐지
+- AGGREGATE: 역별/시간대별/호선별 분산 집계
+- LOAD: Parquet 결과 저장
+
+**실측 성능**
+- 처리 데이터: **7,950,704건**
+- 처리 시간: **50.80초**
+- 처리 속도: **156,520 records/sec**
+- 이상치 탐지: **333,145건** (4.19%)
+- 메모리: Driver 8GB, Executor 4GB
+
+**실행 예시**
+```bash
+# 1. PostgreSQL → Parquet 변환
+docker exec -it subway-spark-master /opt/spark/bin/spark-submit \
+  --master local[4] --driver-memory 8g \
+  --jars /opt/spark/jars/postgresql-42.6.0.jar \
+  /opt/spark-apps/postgres_to_parquet.py
+
+# 2. 대용량 배치 처리
+docker exec -it subway-spark-master /opt/spark/bin/spark-submit \
+  --master local[4] --driver-memory 8g --executor-memory 4g \
+  /opt/spark-apps/pyspark_large_batch.py
+```
+
+**처리 완료 결과**
+
+795만건 데이터를 50.80초 만에 처리 (156,520 records/sec)
+
+![Spark 대용량 처리 완료](images/spark-batch-processing-complete.png)
 
 ### 7. Python ETL 파이프라인 (설계)
 

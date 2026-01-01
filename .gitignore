@@ -36,3 +36,11 @@ airflow/logs/
 logs/
 *.log
 **/congestion_data.csv
+
+### Python ETL (비밀번호 포함 스크립트) ###
+python-etl/postgres_to_parquet.py
+python-etl/pyspark_large_batch.py
+
+### Spark 데이터 ###
+python-etl/*.parquet
+python-etl/output/
