@@ -32,6 +32,18 @@ spring:
           max-active: 10
           max-idle: 5
           min-idle: 2
+
+    # Elasticsearch 설정 추가!
+    elasticsearch:
+      repositories:
+        enabled: true
+
+  # Elasticsearch 연결 설정 추가!
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 3s
+    socket-timeout: 5s
+
   cassandra:
     keyspace-name: subway_analytics
     contact-points: localhost
@@ -61,6 +73,7 @@ logging:
     com.subway.analytics: DEBUG
     org.hibernate.SQL: DEBUG
     org.springframework.cache: DEBUG
+    org.springframework.data.elasticsearch: DEBUG  # Elasticsearch 로그 추가
 
 
 management:

@@ -27,7 +27,7 @@ spring:
             max-age: 3600
 
       routes:
-        # User Service 라우트 추가 (제일 위에!)
+        # User Service 라우트
         - id: user-service-auth
           uri: lb://USER-SERVICE
           predicates:
@@ -58,25 +58,33 @@ spring:
           predicates:
             - Path=/api/analytics/**
 
+        # Search Service (추가!) - Analytics Service와 같은 서비스
+        - id: search-service
+          uri: lb://ANALYTICS-SERVICE
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - RewritePath=/api/search/(?<segment>.*), /api/search/$\{segment}
+
         # Prediction Service
         - id: prediction-service
           uri: lb://PREDICTION-SERVICE
           predicates:
             - Path=/api/prediction/**
 
-        # Chatbot Service 라우트 추가
+        # Chatbot Service
         - id: chatbot-service
           uri: lb://CHATBOT-SERVICE
           predicates:
             - Path=/api/chatbot/**
 
-        # Notification Service 라우트 추가
+        # Notification Service
         - id: notification-service
           uri: lb://NOTIFICATION-SERVICE
           predicates:
             - Path=/api/notification/**
 
-        #  Batch Service 라우트 추가
+        # Batch Service
         - id: batch-service
           uri: lb://BATCH-SERVICE
           predicates:

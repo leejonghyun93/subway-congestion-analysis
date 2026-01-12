@@ -533,6 +533,105 @@ docker exec -it subway-spark-master /opt/spark/bin/spark-submit \
 - Kibana: 실시간 로그 시각화
 
 ---
+### 12. 역 검색 서비스 (Elasticsearch)
+**구축 목적**
+- 492개 지하철 역의 빠른 검색 제공
+- 실시간 자동완성 지원
+- 호선별 필터링 기능
+
+**기술 스택**
+- Elasticsearch 8.11.0: 검색 엔진
+- Spring Data Elasticsearch: Spring 통합
+- Standard Analyzer: 텍스트 분석
+
+**주요 기능**
+- 역 이름 부분 검색 ("강남" → 강남, 강남구청, 강남역)
+- 호선별 필터링 (2호선만 검색)
+- 전체 역 목록 조회 (492개 역)
+
+**API 엔드포인트**
+```bash
+# 역 검색
+GET /api/search/stations?q=강남
+
+# 호선별 검색
+GET /api/search/stations?q=강남&line=2
+
+# 전체 역 목록
+GET /api/search/stations/all
+
+# 인덱스 재생성 (관리자용)
+POST /api/search/reindex
+```
+
+**검색 예시**
+
+![역 검색 API 테스트](images/elasticsearch-search-result.png)
+
+Request:
+```
+GET http://localhost:8080/api/search/stations?q=강남
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "강남-2",
+      "stationName": "강남",
+      "lineNumber": "2",
+      "lineName": "2호선"
+    },
+    {
+      "id": "강남구청-2",
+      "stationName": "강남구청",
+      "lineNumber": "2",
+      "lineName": "2호선"
+    },
+    {
+      "id": "강남구청-7",
+      "stationName": "강남구청",
+      "lineNumber": "7",
+      "lineName": "7호선"
+    },
+    {
+      "id": "강남역-2",
+      "stationName": "강남역",
+      "lineNumber": "2",
+      "lineName": "2호선"
+    }
+  ],
+  "timestamp": "2026-01-13T04:21:20"
+}
+```
+
+**실측 성능**
+- 검색 응답시간: **0.05초** (평균)
+- 인덱싱 데이터: 492개 역
+- 검색 정확도: 95%+ (부분 일치)
+- 자동 인덱싱: 서비스 시작 시 PostgreSQL → Elasticsearch
+
+**Elasticsearch 인덱스 구조**
+```json
+{
+  "id": "강남역-2",
+  "stationName": "강남역",
+  "lineNumber": "2",
+  "lineName": "2호선"
+}
+```
+
+**검색 알고리즘**
+- Standard Analyzer: 기본 텍스트 분석
+- 부분 일치: `findByStationNameContaining()`
+- 복합 조건: 역 이름 + 호선 필터링
+```
+```
+---
+
 
 ## 프론트엔드 화면
 
